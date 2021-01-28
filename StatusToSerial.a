@@ -31,8 +31,11 @@
 ; Thankfully the KIM/PAL is really good at letting you examine memory (press the AD key!) so
 ; you can track down where the image will end up.
 ;
-; Note: I'm pretty sure the opcode is being displayed incorrectly, thanks to my misuse of address modes. Oops!
-; I will update this readme - or the code - when I know.
+; Note: I'm pretty sure the opcode is being displayed incorrectly. Pretty sure this will fix it:
+;
+; LDX #$0            --> Should be --> LDY #$0   
+; LDA $00EF,X        --> Should be --> LDA ($00Ef),Y
+; 
 ;
 ; Q. How do I get the assembled bytes into a ROM?
 ; A. The EPROM programming software I use with the TL866II Plus doesn't let you paste bytes, which is a nuisance.
@@ -115,7 +118,7 @@ org $0000
     jsr OUTCH
     LDA #':'
     jsr OUTCH
-    LDX #$0                 ; LD A with the contents of PC - I think I messed up here.
+    LDX #$0                 ; LD A with the contents of PC - I think I messed up here. Should be LDY #$0   LDA ($00Ef),Y
     LDA $00EF,X            
     jsr PRTBYT          
     jsr SPACE
