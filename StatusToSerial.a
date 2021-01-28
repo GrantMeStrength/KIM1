@@ -1,0 +1,245 @@
+; Status To Serial for the PAL-1
+;
+; Send the status registers to the serial port, by patching the NMI code.
+;
+; Patch it into the NMI vector before use:
+;
+; 17FA - A0 <-
+; 17FB - 1A <- These are new, and point to the new code.
+;
+; 17FE - 00
+; 17FF - 1C
+;
+; To make it work:
+; Connect the system to your serial monitor to make sure everything is sync'd and working.
+; Return to the hexpad/LED mode (use the jumper) and enter AD 200 (or whereever your code is)
+; With the SST switch ON, pressing Go will now output the status to the serial port and as
+; steps through your code.
+;
+; The bad news is that this code must be in ROM, and so you will need to create a new ROM
+; for your PAL-1
+;
+; Assemble this code, and add it to the PAL-1 ROM image at
+; $02A0
+;
+; When burning this into a 27C256 ROM, the KIM-1 image
+; starts at $4000, and so this code is placed at $4A20
+;
+; Note: the 27C256 EPROM does not work reliably in the PAL-1
+; Note: I'm not sure the opcode is being displayed correctly.
+;
+; Q. How do I get the assembled bytes into a ROM?
+; A. The EPROM programming software I use TL866II Plus doesn't let you paste bytes.
+; So I used AutoHotKey on Windows and wrote a simple script to push the bytes into the XGPro software.
+; The script is at the end of this assembly file.
+;
+; 
+
+CRLF    equ $1E2F
+PRNST   equ $1E31
+SAVE    equ $1C00
+SPACE   equ $1E9E
+PRTBYT  equ $1E3B
+OUTCH   equ $1EA0
+INITS   equ $1E88
+START   equ $1C4F
+
+POINTL  equ $FA
+POINTH  equ $FB
+PCL     equ $EF
+PCH     equ $F0
+FLAGS   equ $F1
+SP      equ $F2
+REGA    equ $F3
+REGY    equ $F4
+REGX    equ $F5
+
+
+org $0000
+
+    ; Do what NMI handler does normally, i.e. get a copy of all the regs
+    
+    sta REGA
+    PLA
+    STA FLAGS
+    PLA
+    STA PCL
+    STA POINTL
+    PLA
+    STA PCH
+    STA POINTH
+    STY REGY
+    STX REGX
+    TSX
+    STX SP
+
+    ; Now my code to display the registers
+    ; If I find a way to import this binary into
+    ; the ROM burner rather than doing it by hand
+    ; I will add expanded flags e.g. Nv_BdZC
+    ;
+    ; In the end using autohotkey is a pretty ok way
+    ; to hammer the bytes into the ROM editor
+
+    jsr CRLF
+    
+    ; PC
+    LDA #'P'
+    jsr OUTCH
+    LDA #'C'
+    jsr OUTCH
+    LDA #':'
+    jsr OUTCH
+    
+    LDA PCH
+    jsr PRTBYT
+    LDA PCL
+    jsr PRTBYT
+    jsr SPACE
+  
+  
+    ; OpCode
+    
+    LDA #'O'
+    jsr OUTCH
+    LDA #'P'
+    jsr OUTCH
+    LDA #':'
+    jsr OUTCH
+    LDX #$0
+    LDA $00EF,X      ; LD A with the contents of PC - forcing absolute 
+    jsr PRTBYT
+    jsr SPACE
+    
+    ; A
+   
+    LDA #'A'
+    jsr OUTCH
+    LDA #':'
+    jsr OUTCH
+    LDA REGA
+    jsr PRTBYT
+    jsr SPACE
+    
+    ; X
+    LDA #'X'
+    jsr OUTCH
+    LDA #':'
+    jsr OUTCH
+    LDA REGX
+    jsr PRTBYT
+    jsr SPACE
+    
+    ; Y
+    LDA #'Y'
+    jsr OUTCH
+    LDA #':'
+    jsr OUTCH
+    LDA REGY
+    jsr PRTBYT
+    jsr SPACE
+    
+    ; SP
+    LDA #'S'
+    jsr OUTCH
+    LDA #'P'
+    jsr OUTCH
+    LDA #':'
+    jsr OUTCH
+    LDA SP
+    jsr PRTBYT
+    jsr SPACE
+    
+    ; FLAGS
+    LDA #'F'
+    jsr OUTCH
+    LDA #':'
+    jsr OUTCH
+    
+    LDX #'N'
+    LDA FLAGS
+    AND #$80
+    BNE FALSE_N
+    LDX #'n'
+FALSE_N:
+    TXA
+    jsr OUTCH
+
+    LDX #'V'
+    LDA FLAGS
+    AND #$40
+    BNE FALSE_V
+    LDX #'v'
+FALSE_V:
+    TXA
+    jsr OUTCH
+
+    LDA #'_'
+    jsr OUTCH
+    
+    LDX #'B'
+    LDA FLAGS
+    AND #$10
+    BNE FALSE_B
+    LDX #'b'
+FALSE_B:
+    TXA
+    jsr OUTCH
+    
+ LDX #'D'
+    LDA FLAGS
+    AND #$8
+    BNE FALSE_D
+    LDX #'d'
+FALSE_D:
+    TXA
+    jsr OUTCH    
+    
+    LDX #'I'
+    LDA FLAGS
+    AND #$4
+    BNE FALSE_I
+    LDX #'i'
+FALSE_I:
+    TXA
+    jsr OUTCH    
+    
+    LDX #'Z'
+    LDA FLAGS
+    AND #$2
+    BNE FALSE_Z
+    LDX #'z'
+FALSE_Z:
+    TXA
+    jsr OUTCH    
+    
+    LDX #'C'
+    LDA FLAGS
+    AND #$1
+    BNE FALSE_C
+    LDX #'c'
+FALSE_C:
+    TXA
+    jsr OUTCH    
+    
+    
+    jsr INITS
+    jmp START
+    
+    
+    
+    ; end
+    
+    
+    
+    
+    
+    
+    Autohotkey Script
+    
+    Use this script, start editing the byte in the EPROM editor, and press CTRL J
+    
+    ^j::
+SEND,85F36885F16885EF85FA6885F085FB84F486F5BA86F2202F1EA95020A01EA94320A01EA93A20A01EA5F0203B1EA5EF203B1E209E1EA94F20A01EA95020A01EA93A20A01EA200B5EF203B1E209E1EA94120A01EA93A20A01EA5F3203B1E209E1EA95820A01EA93A20A01EA5F5203B1E209E1EA95920A01EA93A20A01EA5F4203B1E209E1EA95320A01EA95020A01EA93A20A01EA5F2203B1E209E1EA94620A01EA93A20A01EA24EA5F12980D002A26E8A20A01EA256A5F12940D002A2768A20A01EA95F20A01EA242A5F12910D002A2628A20A01EA244A5F12908D002A2648A20A01EA249A5F12904D002A2698A20A01EA25AA5F12902D002A27A8A20A01EA243A5F12901D002A2638A20A01E20881E4C4F1C000000000000
+    
+    
