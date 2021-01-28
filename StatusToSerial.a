@@ -19,19 +19,26 @@
 ; The bad news is that this code must be in ROM, and so you will need to create a new ROM
 ; for your PAL-1
 ;
-; Assemble this code, and add it to the PAL-1 ROM image at
-; $02A0
+; Assemble this code, and add it to the PAL-1 ROM image at $02A0 which is ununsed on the PAL-1
+; but still within the ROM space that means NMI-called code works nicely.
 ;
-; When burning this into a 27C256 ROM, the KIM-1 image
-; starts at $4000, and so this code is placed at $4A20
 ;
-; Note: the 27C256 EPROM does not work reliably in the PAL-1
-; Note: I'm not sure the opcode is being displayed correctly.
+; Note: If you are using an EEPROM larger than a 27C64 e.g. an 27C256 then you may need to
+; check the A13 line on the PAL-1 to make sure it isn't floating, as this can cause
+; crashes. A14 will be at 5v, but A13 is not connected, so tie it to ground with a tiny bodge wire 
+; and remember this will cause the location of the image in the
+; ROM to change (if A14 is high and A13 low, the code will appear at $4000). 
+; Thankfully the KIM/PAL is really good at letting you examine memory (press the AD key!) so
+; you can track down where the image will end up.
+;
+; Note: I'm not sure the opcode is being displayed correctly. Need to test a litte more.
+; I will update this readme - or the code - when I know.
 ;
 ; Q. How do I get the assembled bytes into a ROM?
-; A. The EPROM programming software I use TL866II Plus doesn't let you paste bytes.
-; So I used AutoHotKey on Windows and wrote a simple script to push the bytes into the XGPro software.
-; The script is at the end of this assembly file.
+; A. The EPROM programming software I use with the TL866II Plus doesn't let you paste bytes, which is a nuisance.
+; So I used an app called AutoHotKey on Windows and wrote a simple script to push the bytes into the XGPro software.
+; It's effectively scripting the keyboard so you are faking manually entering all the hex codes by hand.
+; The script is at the end of this assembly file. Autohotkey is free.
 ;
 ; 
 
