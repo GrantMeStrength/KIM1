@@ -22,12 +22,11 @@
 ; Assemble this code, and add it to the PAL-1 ROM image at $02A0 which is ununsed on the PAL-1
 ; but still within the ROM space that means NMI-called code works nicely.
 ;
-;
 ; Note: If you are using an EEPROM larger than a 27C64 e.g. an 27C256 then you may need to
 ; check the A13 line on the PAL-1 to make sure it isn't floating, as this can cause
 ; crashes. A14 will be at 5v, but A13 is not connected, so tie it to ground with a tiny bodge wire 
-; and remember this will cause the location of the image in the
-; ROM to change (if A14 is high and A13 low, the code will appear at $4000). 
+; and remember this will cause the location of the image in the ROM to change (if A14 is high and 
+; A13 low, the code will appear at $4000). 
 ; Thankfully the KIM/PAL is really good at letting you examine memory (press the AD key!) so
 ; you can track down where the image will end up.
 ;
@@ -36,18 +35,16 @@
 ; A. The EPROM programming software I use with the TL866II Plus doesn't let you paste bytes, which is a nuisance.
 ; So I used an app called AutoHotKey on Windows and wrote a simple script to push the bytes into the XGPro software.
 ; It's effectively scripting the keyboard so you are faking manually entering all the hex codes by hand.
-; The script is at the end of this assembly file. Autohotkey is free.
+; The script is at the end of this assembly file. AutoHotKey is free.
 ;
 ; 
 
-CRLF    equ $1E2F
-PRNST   equ $1E31
-SAVE    equ $1C00
-SPACE   equ $1E9E
-PRTBYT  equ $1E3B
-OUTCH   equ $1EA0
-INITS   equ $1E88
-START   equ $1C4F
+CRLF    equ $1E2F   ; Monitor code to take a new line.
+SPACE   equ $1E9E   ; Monitor code to display a space. It calls OUTCH.
+PRTBYT  equ $1E3B   ; Monitor code to send a byte to the serial port e.g. '41'
+OUTCH   equ $1EA0   ; Send an individual character to the serial port e.g. 'A'
+INITS   equ $1E88   ; An important KIM-1 routine that needs called after the NMI.
+START   equ $1C4F   ; The begining of the monitor code that tests keypresses etc.
 
 POINTL  equ $FA
 POINTH  equ $FB
@@ -64,10 +61,10 @@ org $0000
 
     ; Do what NMI handler does normally, i.e. get a copy of all the regs
     ; This code is lifted from the KIM-1 monitor at location $1c00
-    ; and all it does it PULL register values from the stack (placed there when the NMI
+    ; and all it does is pull register values from the stack (placed there when the NMI
     ; happened) and then store them in zero page memory. This is something all KIM
-    ; system do so the user can manual examine their contents later. Very useful.
-    ; We do it too, as it makes access the values to dump later much easier.
+    ; system do so the user can manually examine their contents later. Very useful.
+    ; We do it too, as it makes access the values later much easier.
     
     sta REGA
     PLA
@@ -243,8 +240,8 @@ FALSE_C:
     
     
     
-    Autohotkey Script
-    
+    AutoHotKey Script
+    No-one wants to type all these hex digits into a ROM programming utility. It's not 1977 any more! Use the AuoHotKey app.
     Use this script, start editing the byte in the EPROM editor, and press CTRL J
     
     ^j::
