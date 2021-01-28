@@ -31,7 +31,7 @@
 ; Thankfully the KIM/PAL is really good at letting you examine memory (press the AD key!) so
 ; you can track down where the image will end up.
 ;
-; Note: I'm not sure the opcode is being displayed correctly. Need to test a litte more.
+; Note: I'm pretty sure the opcode is being displayed incorrectly, thanks to my misuse of address modes. Oops!
 ; I will update this readme - or the code - when I know.
 ;
 ; Q. How do I get the assembled bytes into a ROM?
@@ -65,6 +65,11 @@ REGX    equ $F5
 org $0000
 
     ; Do what NMI handler does normally, i.e. get a copy of all the regs
+    ; This code is lifted from the KIM-1 monitor at location $1c00
+    ; and all it does it PULL register values from the stack (placed there when the NMI
+    ; happened) and then store them in zero page memory. This is something all KIM
+    ; system do so the user can manual examine their contents later. Very useful.
+    ; We do it too, as it makes access the values to dump later much easier.
     
     sta REGA
     PLA
@@ -80,32 +85,29 @@ org $0000
     TSX
     STX SP
 
-    ; Now my code to display the registers
-    ; If I find a way to import this binary into
-    ; the ROM burner rather than doing it by hand
-    ; I will add expanded flags e.g. Nv_BdZC
-    ;
-    ; In the end using autohotkey is a pretty ok way
-    ; to hammer the bytes into the ROM editor
+    ; Now the new code to display the registers. We read the values from the locations
+    ; we just stored them in, in the code above. Then we use the monitor routines to
+    ; send them to the serial port. Really, all the hard work is done for us!
 
-    jsr CRLF
+
+    jsr CRLF            ; Take a new line to start
     
     ; PC
     LDA #'P'
-    jsr OUTCH
+    jsr OUTCH           ; The monitor routine to output character in A
     LDA #'C'
     jsr OUTCH
     LDA #':'
     jsr OUTCH
     
-    LDA PCH
-    jsr PRTBYT
+    LDA PCH             ; Display the High and Low bytes of the PC
+    jsr PRTBYT          ; The monitor routine to output a Byte
     LDA PCL
     jsr PRTBYT
-    jsr SPACE
+    jsr SPACE           ; Send a space character to the serial port.
   
   
-    ; OpCode
+    ; OpCode            ; Read the byte the PC is counting to. It should be the opcode.
     
     LDA #'O'
     jsr OUTCH
@@ -113,9 +115,9 @@ org $0000
     jsr OUTCH
     LDA #':'
     jsr OUTCH
-    LDX #$0
-    LDA $00EF,X      ; LD A with the contents of PC - forcing absolute 
-    jsr PRTBYT
+    LDX #$0                 ; LD A with the contents of PC - I think I messed up here.
+    LDA $00EF,X            
+    jsr PRTBYT          
     jsr SPACE
     
     ; A
@@ -157,7 +159,7 @@ org $0000
     jsr PRTBYT
     jsr SPACE
     
-    ; FLAGS
+    ; FLAGS         Display a character in upper or lower case for each bit in the status flag reg
     LDA #'F'
     jsr OUTCH
     LDA #':'
@@ -229,6 +231,7 @@ FALSE_C:
     TXA
     jsr OUTCH    
     
+    ; Return to where the original NMI code at $1c00 would jump to.
     
     jsr INITS
     jmp START
