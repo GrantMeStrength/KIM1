@@ -48,7 +48,7 @@ namespace PaperTape
                 else
                     lineLimit = 0x18;
 
-                outputLine = ";" + (String.Format("{0:x2}", lineLimit)) + String.Format("{0:x4}", baseAddress);
+                outputLine = ";" + (String.Format("{0:x2}", lineLimit)).ToUpper() + String.Format("{0:x4}", baseAddress).ToUpper();
 
                 for (int j = 0; j< lineLimit; j++)
                 {
