@@ -29,6 +29,16 @@ as the Uno's code already mirrors the LED display over serial. On the Uno I woul
 add print statements to the main loop (perhaps only outputting when a specific key is pressed, or memory address range
 is active).
 
+## Papertape
+
+What's the easiest way to load a program into the KIM-1? Using the monitor programs L command, which will let your serial app
+send a file in .PTP or "papertape" format. A papertape file is really a plain text file containing the binary data in the form 
+of hex strings, with a few additions for the loading address and a checksum.
+
+I found a program to generate the papertape format, but it was written a long time ago and my current Windows system threw
+a fit when I tried to run it. So here is some C# code that will get you most of the way to writing a utility that can take
+your assembled 6502 (from a emulated assembler for example) into a format you can load into the KIM-1 or clone.
+
 ## Links
 
 * [KIM-1](https://www.wikipedia.org/wiki/KIM-1)
