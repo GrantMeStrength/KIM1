@@ -69,7 +69,7 @@ namespace PaperTape
             }
 
             var lastLine = ";00" + String.Format("{0:x4}", (UInt16)(s+1)).ToUpper();
-            var lastcheck = int.Parse(lastLine.Substring(1, 2), System.Globalization.NumberStyles.HexNumber) + int.Parse(lastLine.Substring(3, 2), System.Globalization.NumberStyles.HexNumber);
+            var lastcheck = int.Parse(lastLine.Substring(2, 2), System.Globalization.NumberStyles.HexNumber) + int.Parse(lastLine.Substring(4, 2), System.Globalization.NumberStyles.HexNumber);
             lastLine += String.Format("{0:x4}", (UInt16)lastcheck).ToUpper();
 
             papertape += lastLine;
