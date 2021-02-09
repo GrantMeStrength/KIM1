@@ -39,6 +39,11 @@ I found a program to generate the papertape format, but it was written a long ti
 a fit when I tried to run it. So here is some C# code that will get you most of the way to writing a utility that can take
 your assembled 6502 (from a emulated assembler for example) into a format you can load into the KIM-1 or clone.
 
+## Kim Uno Case
+
+Some guides on making a case for the KIM Uno: a small, battery powered handheld KIM clone designed by Oscar Vermeulen. 
+This case is constructed using laser-cut acrylic and a 3D printed frame. Photos are included.
+
 ## Links
 
 * [KIM-1](https://www.wikipedia.org/wiki/KIM-1)
