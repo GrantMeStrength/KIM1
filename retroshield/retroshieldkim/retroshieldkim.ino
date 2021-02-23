@@ -2,7 +2,13 @@
 //
 //  Need to add support for listening to the serial port to
 //  accept an instruction, execute it, and return status.
-
+//  Q. Can I set the address of the CPU? I don't think I can
+// just force it.. It would need to execute a piece of code that
+// made it jump to where I want.. But the 17fe vectors don't seem
+// to do anything..
+// Q. How much control do I have anyway? Can I just stop the clock?
+// Or would I patch NMI or something to execute my code and display
+// the results like I did for the KIM?
 //
 //
 //
@@ -164,9 +170,13 @@ byte    RAM002[RAM002_END-RAM002_START+1];
 #define ROM002_START   0x1C00
 #define ROM002_END     0x1FFF
 
+
 ////////////////////////////////////////////////////////////////////
 // Monitor Code
 ////////////////////////////////////////////////////////////////////
+
+
+
 
 // 6530-003 ROM, 0x1800-0x1BFF
 PROGMEM const unsigned char rom003_bin[] = {
@@ -337,7 +347,7 @@ byte rom002_bin[] = {
 	0xA4, 0xFC, 0x60, 0xE6, 0xFA, 0xD0, 0x02, 0xE6, 0xFB, 0x60, 0xA2, 0x21,
 	0xA0, 0x01, 0x20, 0x02, 0x1F, 0xD0, 0x07, 0xE0, 0x27, 0xD0, 0xF5, 0xA9,
 	0x15, 0x60, 0xA0, 0xFF, 0x0A, 0xB0, 0x03, 0xC8, 0x10, 0xFA, 0x8A, 0x29,
-	0x0F, 0x4A, 0xAA, 0x98, 0x10, 0x03, 0x18, 0x69, 0x07, 0xCA, 0xD0, 0xFA,
+	0x0F, 0x4A, 0xAA, 0x98, 0x10, 0x03, 0x18, 0x69, 0x07, 0xCA, 0xD0, 0xFA, // my code is not here, but here is where it's returning..
 	0x60, 0x18, 0x65, 0xF7, 0x85, 0xF7, 0xA5, 0xF6, 0x69, 0x00, 0x85, 0xF6,
 	0x60, 0x20, 0x5A, 0x1E, 0x20, 0xAC, 0x1F, 0x20, 0x5A, 0x1E, 0x20, 0xAC,
 	0x1F, 0xA5, 0xF8, 0x60, 0xC9, 0x30, 0x30, 0x1B, 0xC9, 0x47, 0x10, 0x17,
@@ -349,6 +359,39 @@ byte rom002_bin[] = {
 	0xEF, 0xF7, 0xFC, 0xB9, 0xDE, 0xF9, 0xF1, 0xFF, 0xFF, 0xFF, 0x1C, 0x1C,
 	0x22, 0x1C, 0x1F, 0x1C
 };
+
+// JK my code
+//
+// In theory this is where I put code that executes an instruction and relays the results to me
+// Start:
+// Input - Wait for three bytes - these are OpCode Bytes 1,2,3
+// Action - Fill memory block with NOPS, Write the opcode into a block of memory, JMP to that memory block
+// Output - Write out A, X, Y, Flags
+// goto Start
+//
+// Could also use the serialhandler to intercept three bytes and then jump here.
+// This code will not test branches obviously
+//
+
+
+#define JKCODE_START 0x0500
+#define JKCODE_END 0x0500 + 10
+
+/*
+ *  org 0x500
+ *  LDA #$41   ; 'A'
+ *  JSR $1ea0     ; call OUTCH
+ *  RTS
+ * 
+ * A9 41 20 A0 1E 60
+ * 
+ * 
+ */
+// Org 0x500 
+byte jkrom_bin[] = {
+  0xA9, 0x41, 0x20, 0xA0, 0x1E, 0x60, 0, 0, 0, 0, 0
+};
+
 
 ////////////////////////////////////////////////////////////////////
 // 6530 Registers
@@ -487,6 +530,15 @@ void kim_init() {
   RAM002[(0x17FB)-(0x17C0)]=0x1C;
   RAM002[(0x17FE)-(0x17C0)]=0x00;
   RAM002[(0x17FF)-(0x17C0)]=0x1C;
+
+// JK - set the vectors to launch MY code..?
+
+  RAM002[(0x17FA)-(0x17C0)]=0x00;
+  RAM002[(0x17FB)-(0x17C0)]=0x05;
+  RAM002[(0x17FE)-(0x17C0)]=0x00;
+  RAM002[(0x17FF)-(0x17C0)]=0x05;
+
+  // didn't work
   
   // Skip TTY timing =====
   // JMP $1C4F    4C 4F 1C
@@ -723,7 +775,18 @@ ISR(TIMER1_COMPA_vect)
     DATA_DIR = DIR_OUT;
 
     // Order the comparison from low to high memory for optimizations
-    
+
+    // JK Code
+
+     if ( (uP_ADDR <= JKCODE_END) && (JKCODE_START <= uP_ADDR) )
+     {
+        //Serial.println("*** JK Code being read");
+        DATA_OUT = jkrom_bin[uP_ADDR - JKCODE_START];
+        //char tmp[48];
+        //sprintf(tmp, "OpCode: %0.2X  %0.4X   %0.4X  %0.2X ",DATA_OUT, uP_ADDR, uP_ADDR - JKCODE_START, jkrom_bin[uP_ADDR - JKCODE_START]);
+        //Serial.write(tmp);
+     }
+    else
     // ROM?
     if ( (ROM003_START <= uP_ADDR) && (uP_ADDR <= ROM003_END) )
       DATA_OUT = pgm_read_byte_near(rom003_bin + (uP_ADDR - ROM003_START));
@@ -824,6 +887,9 @@ ISR(TIMER1_COMPA_vect)
  time loop() runs, so using delay inside loop can delay
  response.  Multiple bytes of data may be available.
  */
+
+// Maybe can hack reset or NMI to go to my code.
+ 
 void serialEvent0() 
 {
   if (Serial.available())
@@ -859,6 +925,7 @@ void serialEvent0()
       Serial.write(ch);
     }
   }
+
 }
 
 
@@ -1047,7 +1114,9 @@ void loop()
       lcd.print(freq);  lcd.print(" kHz  6502 ");
     }
   }
-  
-  serialEvent0();
+
+  // Serial port check
+  // JK remove for now
+  //serialEvent0();
     
 }

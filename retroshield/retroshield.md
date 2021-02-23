@@ -11,3 +11,11 @@ This is a project where I try to do that - by using a Retroshield with a real 65
 To do this, I need to write some Swift code that can communicate with the Retroshield - it connects over the Arduino's USB port by default. I also need to write some code on the Retroshield 'rom' that listens for commands from the serial port, takes an instruction, executes it, and then responds with the 6502 status (registers, flags, and maybe zero page or full memory map?).
 
 I'll start by taking the [KIM-1 Retroshield code](https://gitlab.com/8bitforce/retroshield-arduino/-/tree/master/k6502/k65c02_kim1) (as I know the KIM-1 now pretty well) and adapting that.
+
+## Monday 22, Feb 2021
+
+* I have gotten a Mac program to read/write to the serial port.
+
+* I have gotten the Retroshield 6502 system to run my code on launch.
+
+* Need to write 6502 to wait for three bytes, treat them as opcodes, execute them, and report results.
