@@ -44,6 +44,11 @@ your assembled 6502 (from a emulated assembler for example) into a format you ca
 Some guides on making a case for the KIM Uno: a small, battery powered handheld KIM clone designed by Oscar Vermeulen. 
 This case is constructed using laser-cut acrylic and a 3D printed frame. Photos are included.
 
+## Retroshield Fuzzing
+
+[Some code and ideas](retroshield/retroshield.md) as I work out whether testing emulated 6502 opcodes against real ones is possible and useful.
+
+
 ## Links
 
 * [KIM-1](https://www.wikipedia.org/wiki/KIM-1)
