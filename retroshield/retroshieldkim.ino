@@ -1,3 +1,13 @@
+// 6502 Fuzzing Project
+//
+//  Need to add support for listening to the serial port to
+//  accept an instruction, execute it, and return status.
+
+//
+//
+//
+//
+//
 ////////////////////////////////////////////////////////////////////
 // RetroShield 6502 for Arduino Mega
 // KIM I
