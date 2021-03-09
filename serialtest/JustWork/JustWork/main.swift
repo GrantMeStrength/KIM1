@@ -7,9 +7,8 @@
 
 import Foundation
 
-print("Hello, World!")
 
-let serialPort: SerialPort = SerialPort(path: "/dev/cu.usbmodem32301")
+let serialPort: SerialPort = SerialPort(path: "/dev/cu.usbserial-AC00I4ST")
 
 
 do {
@@ -24,74 +23,28 @@ do {
         print("defer Port Closed")
     }
 
-    serialPort.setSettings(receiveRate: .baud115200,
-                           transmitRate: .baud115200,
+    serialPort.setSettings(receiveRate: .baud1200,
+                           transmitRate: .baud1200,
                            minimumBytesToRead: 1)
-    print("Writing to port")
-    let bytesWritten = try serialPort.writeString("0200 ")
-    print("Written")
-    print(bytesWritten)
+    usleep(200000)
     
-    print("Reading from port")
+    // Poke in the new values
     
-    for _ in 0..<100
-    {
+    Poke(address: 0x200, value: 10)
+    Poke(address: 0x201, value: 20)
+    Poke(address: 0x202, value: 30)
     
-    let stringReceived = try serialPort.readLine()
+    // Peek them back out to confirm
     
-    print(stringReceived)
-    }
-
+    _ = Peek(address: 0x0200)
+    usleep(200000)
+    _ = Peek(address: 0x0201)
+    usleep(200000)
+    _ = Peek(address: 0x0202)
+    usleep(200000)
+   
     print("End")
    
-    
-    /*
-    print("Writing test string <\(testString)> of \(testString.count) characters to serial port")
-
-    let bytesWritten = try serialPort.writeString(testString)
-
-    print("Successfully wrote \(bytesWritten) bytes")
-    print("Waiting to receive what was written...")
-
-    let stringReceived = try serialPort.readString(ofLength: bytesWritten)
-
-    if testString == stringReceived {
-        print("Received string is the same as transmitted string. Test successful!")
-    } else {
-        print("Uh oh! Received string is not the same as what was transmitted. This was what we received,")
-        print("<\(stringReceived)>")
-    }
-
-
-    print("Now testing reading/writing of \(numberOfMultiNewLineTest) lines")
-
-    var multiLineString: String = ""
-
-
-    for _ in 1...numberOfMultiNewLineTest {
-        multiLineString += testString + "\n"
-    }
-
-    print("Now writing multiLineString")
-
-    var _ = try serialPort.writeString(multiLineString)
-
-
-    for i in 1...numberOfMultiNewLineTest {
-        let stringReceived = try serialPort.readLine()
-          
-        if testString == stringReceived {
-            print("Received string \(i) is the same as transmitted section. Moving on...")
-        } else {
-            print("Uh oh! Received string \(i) is not the same as what was transmitted. This was what we received,")
-            print("<\(stringReceived)>")
-            break
-        }
-    }
-    */
-    print("End of example");
-
-
 } catch PortError.failedToOpen {
     print("Serial port failed to open. You might need root permissions.")
 } catch {
@@ -99,4 +52,74 @@ do {
 }
 
 
+func Poke(address : UInt16, value : UInt8)
+{
+    // Send address, space
+    // Send value, .
+    
+    print("Poke \(value) into \(address)");
+    
+    do {
+        
+    let addr = String(format: "%04X", address).map { String($0) }
+    let byte = String(format: "%02X", value).map { String($0) }
+        
+       
+        _ = try serialPort.writeString(addr[0]) ; usleep(100000)
+        _ = try serialPort.writeString(addr[1]) ; usleep(100000)
+        _ = try serialPort.writeString(addr[2]) ; usleep(100000)
+        _ = try serialPort.writeString(addr[3]) ; usleep(100000)
+        _ = try serialPort.writeString(" ") ; usleep(200000)
+        
+        let _ = try serialPort.readString(ofLength: 21)
+        
+        _ = try serialPort.writeString(byte[0]) ; usleep(100000)
+        _ = try serialPort.writeString(byte[1]) ; usleep(100000)
+        _ = try serialPort.writeString(".") ; usleep(200000)
+        
+
+       let _ = try serialPort.readString(ofLength: 19)
+        
+        usleep(200000)
+         
+    }  catch {
+        print("Error: \(error)")
+    }
+    
+}
+
+
+func Peek(address : UInt16) -> UInt8
+{
+    
+    var dec : UInt8 = 0
+    
+    do {
+        
+    let addr = String(format: "%04X", address).map { String($0) }
+        
+       
+        _ = try serialPort.writeString(addr[0]) ; usleep(100000)
+        _ = try serialPort.writeString(addr[1]) ; usleep(100000)
+        _ = try serialPort.writeString(addr[2]) ; usleep(100000)
+        _ = try serialPort.writeString(addr[3]) ; usleep(100000)
+        _ = try serialPort.writeString(" ") ;
+        
+        
+        let s = try serialPort.readString(ofLength: 21)
+        
+        let parts = s.components(separatedBy: " ")
+        
+      
+         dec = UInt8(parts[2], radix: 16)!
+              
+    }  catch {
+        print("Error: \(error)")
+    }
+    
+    print("Peek \(dec) from \(address)");
+    
+    
+    return dec
+}
 
