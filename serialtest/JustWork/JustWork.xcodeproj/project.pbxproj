@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		52A9577825F88A540059F0B3 /* CPU.swift in Sources */ = {isa = PBXBuildFile; fileRef = 52A9577725F88A540059F0B3 /* CPU.swift */; };
+		52A9577A25F88A900059F0B3 /* Memory.swift in Sources */ = {isa = PBXBuildFile; fileRef = 52A9577925F88A8F0059F0B3 /* Memory.swift */; };
 		52B92CBA25E4A9D4000D3832 /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = 52B92CB925E4A9D4000D3832 /* main.swift */; };
 		52B92CC225E4AA17000D3832 /* SwiftSerial.swift in Sources */ = {isa = PBXBuildFile; fileRef = 52B92CC125E4AA17000D3832 /* SwiftSerial.swift */; };
 /* End PBXBuildFile section */
@@ -24,6 +26,8 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		52A9577725F88A540059F0B3 /* CPU.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CPU.swift; sourceTree = SOURCE_ROOT; };
+		52A9577925F88A8F0059F0B3 /* Memory.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Memory.swift; sourceTree = SOURCE_ROOT; };
 		52B92CB625E4A9D4000D3832 /* JustWork */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = JustWork; sourceTree = BUILT_PRODUCTS_DIR; };
 		52B92CB925E4A9D4000D3832 /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
 		52B92CC125E4AA17000D3832 /* SwiftSerial.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwiftSerial.swift; sourceTree = "<group>"; };
@@ -61,6 +65,8 @@
 			isa = PBXGroup;
 			children = (
 				52B92CB925E4A9D4000D3832 /* main.swift */,
+				52A9577725F88A540059F0B3 /* CPU.swift */,
+				52A9577925F88A8F0059F0B3 /* Memory.swift */,
 			);
 			path = JustWork;
 			sourceTree = "<group>";
@@ -122,8 +128,10 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				52A9577A25F88A900059F0B3 /* Memory.swift in Sources */,
 				52B92CBA25E4A9D4000D3832 /* main.swift in Sources */,
 				52B92CC225E4AA17000D3832 /* SwiftSerial.swift in Sources */,
+				52A9577825F88A540059F0B3 /* CPU.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

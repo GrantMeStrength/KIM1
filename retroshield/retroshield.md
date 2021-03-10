@@ -172,6 +172,6 @@ func Peek(address : UInt16) -> UInt8
 
 ```
 
-## Next step
+## Tuesday 9th, March 20201
 
-Now that I can send over memory and read it back, I just need to send a G command. That means I can poke in the assembly instructions, execute the code, and then read the status of the flags. Thanks to the way the KIM works, the status of the flags and registers are mirrored in some zero page addresses.
+I added the ability to send a G to the PAL-1, the command which executes code. Then it was a matter of bringing over my 6502 emulation code into the project, generating a list of instructions to execute on the vritual and real CPUs, and finally parsing the results. Immediately I found an issue with the SBC instruction as I expected (looks like I messed up the Carry flag). So now I've an easy way to debug my opcodes against a real 6502 - so the next few evenings I can debug the 6502 and see if I get it to the point where it can run BASIC (so far my iPhone KIM-1 emulator won't run BASIC - and with these errors in the opcode emulator that's understandable!)
