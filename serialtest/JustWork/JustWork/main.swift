@@ -19,7 +19,195 @@ private var MOS6502 = CPU()
 
 let code : [UInt8] = [
     
-    0x18,0xd8,0xb8,0,   // CLC CLD CLV
+    // BIT
+    
+    0xA9,0xAA,0,0,      // LDA #$0
+    0x85,01,0,0,        // STA a
+    
+    0xA9,0x0,0,0,      // LDA #$0
+    0x85,02,0,0,        // STA a
+    
+    0xA9,0xff,0,0,      // LDA #$0
+    0x85,03,0,0,        // STA a
+   
+    0xA9,0x55,0,0,      // LDA #$0
+    0x85,04,0,0,        // STA a
+   
+    
+    
+    0x18,0,0,0,          // CLC
+    0xb8,0,0,0,
+    
+    0x24,01,0,0,
+    0x24,02,0,0,
+    0x24,03,0,0,
+    0x24,04,0,0,
+    
+    
+    
+    // Stack fun - there is no PLY, PLX etc on 6502! ok
+    0xd8, 0,0,0,        // CLD // Not Decimal mode
+    0xA2,0xff,0,0,      // LDA #$0
+    0x9A,0x0,0,0,      // LDA #$0
+    0xA9,0x3,0,0,      // LDA #$0
+  
+    0x48,0x0,0,0,      // LDA #$0
+    0xBA,0x0,0,0,      // LDA #$0
+    0xA9,0x99,0,0,      // LDA #$0
+   
+    0x68,0x0,0,0,      // LDA #$0
+   0xBA,0x0,0,0,      // LDA #$0
+ 
+    
+    // CMP ok 
+    
+    0xd8, 0,0,0,        // CLD // Not Decimal mode
+    0xA9,0x10,0,0,      // LDA #$0
+    0x85,0x01,0,0,      // LDA #$0
+    0xC9,0x20,0,0,      // LDA #$0
+    0xC9,0x10,0,0,      // LDA #$0
+    0xC9,0x5,0,0,      // LDA #$0
+    0xC9,0x0,0,0,      // LDA #$0
+    0xC5,0x1,0,0,      // LDA #$0
+   
+    
+    
+    // More addition with big wrapping values
+
+    0xf8, 0,0,0,        // SED // Decimcal Mode
+    0xA9,0x60,0,0,      // LDA #$0
+    0x18,0,0,0,          // CLC
+    0x69,0xA,0,0,      // ADC #$1
+    0x18,0,0,0,          // CLC
+    0x69,0xA,0,0,      // ADC #$10x18,0,0,0,          // CLC
+    0x18,0,0,0,          // CLC
+    0x69,0xA,0,0,      // ADC #$10x18,0,0,0,          // CLC
+    0x18,0,0,0,          // CLC
+    0x69,0xA,0,0,      // ADC #$10x18,0,0,0,          // CLC
+    0x18,0,0,0,          // CLC
+    0x69,0xA,0,0,      // ADC #$10x18,0,0,0,          // CLC
+    0x18,0,0,0,          // CLC
+    0x69,0xA,0,0,      // ADC #$10x18,0,0,0,          // CLC
+    0x18,0,0,0,          // CLC
+    0x69,0xA,0,0,      // ADC #$10x18,0,0,0,          // CLC
+    0x18,0,0,0,          // CLC
+    0x69,0x1,0,0,      // ADC #$10x18,0,0,0,          // CLC
+    0x18,0,0,0,          // CLC
+    0x69,0x1,0,0,      // ADC #$10x18,0,0,0,          // CLC
+    0x18,0,0,0,          // CLC
+    0x69,0x1,0,0,      // ADC #$10x18,0,0,0,          // CLC
+    0x18,0,0,0,          // CLC
+    0x69,0x1,0,0,      // ADC #$10x18,0,0,0,          // CLC
+    0x18,0,0,0,          // CLC
+    0x69,0x1,0,0,      // ADC #$10x18,0,0,0,          // CLC
+    0x18,0,0,0,          // CLC
+    0x69,0x1,0,0,      // ADC #$10x18,0,0,0,          // CLC
+   
+    
+    0x69,0x2,0,0,      // ADC #$1
+    0x69,0x2,0,0,      // ADC #$1
+    
+    
+    0xd8, 0,0,0,        // CLD // Not Decimal mode
+    0xA9,0x60,0,0,      // LDA #$0
+    0x18,0,0,0,          // CLC
+    0x69,0x20,0,0,      // ADC #$1
+    0x69,0x20,0,0,      // ADC #$1
+    0x69,0x20,0,0,      // ADC #$1
+    
+    
+    
+    
+    // And and OR
+    
+    0xA2,01,0,0,        // LDX 1
+    0xA9,0x55,0,0,        // LDA 2
+    0x85,02,0,0,        // LDY 2
+    0xA9,70,0,0,        // LDY 2
+    0x29,50,0,0,        // LDY 2
+    0x35,01,0,0,        // LDY 2
+    0x3D,01,0,0,        // LDY 2
+    0xA9,70,0,0,        // LDY 2
+    0x09,50,0,0,        // LDY 2
+    0x15,01,0,0,        // LDY 2
+    0x1D,01,0,0,        // LDY 2
+    
+    // put 1,2,3,4 into 0x30..
+    0xd8,0,0,0,         // CLD
+    0xA9,02,0,0,        // LDA 2
+    0xA2,01,0,0,        // LDX 1
+    0xA0,02,0,0,        // LDY 2
+    0x18,0,0,0,         // CLC
+    0x69,0x5,0,0,      // ADC #12
+    0x18,0,0,0,         // CLC
+    0x65,0,0,0,      // ADC #12
+    0x18,0,0,0,         // CLC
+    0x75,0x05,0,0,      // ADC #12
+    0x18,0,0,0,         // CLC
+    0x7D,0,0,0,      // ADC #12
+    0x18,0,0,0,         // CLC
+    0x79,0,0,0,      // ADC #12
+   
+    0x18,0,0,0,         // CLC
+   
+    
+    
+    
+    // TEST SBC ADC
+   // 0xd8, 0,0,0,        // CLD // Not Decimal mode
+    0xf8, 0,0,0,        // SED // Decimcal Mode
+    0xA9,0x1,0,0,      // LDA #$0
+  
+    0x38,0,0,0,          // SEC
+    0xE9,0x1,0,0,      // SBC #$0
+    0x18,0,0,0,          // CLC
+    0x69,0x1,0,0,      // ADC #$1
+    0x38,0,0,0,          // SEC
+    0xE9,0x2,0,0,      // SBC #$2
+    0x38,0,0,0,          // SEC
+    0xE9,0x2,0,0,      // SBC #$2
+    0x38,0,0,0,          // SEC
+    0xE9,0x2,0,0,      // SBC #$2
+    0x38,0,0,0,          // SEC
+    0xE9,0x2,0,0,      // SBC #$2
+    0x38,0,0,0,          // SEC
+    0xE9,0x2,0,0,      // SBC #$2
+    0xA9,0x64,0,0,      // LDA #$0
+    0x38,0,0,0,          // SEC
+    0xE9,0x20,0,0,      // SBC #$2
+    0x38,0,0,0,          // SEC
+    0xE9,0x20,0,0,      // SBC #$2
+    0x38,0,0,0,          // SEC
+    0xE9,0x20,0,0,      // SBC #$2
+    0x38,0,0,0,          // SEC
+    0xE9,0x20,0,0,      // SBC #$2
+  
+    
+    
+    0x18,0,0,0,          // CLC
+    0x69,0x1,0,0,      // ADC #$1
+    
+    0xf8, 0,0,0,        // SED // Decimcal Mode
+    0xA9,0x1,0,0,      // LDA #$0
+    0x18,0,0,0,          // CLC
+    0x69,0x1,0,0,      // ADC #$1
+    0x38,0,0,0,          // SEC
+    0xE9,0x1,0,0,      // SBC #$0
+    0x18,0,0,0,          // CLC
+    0x69,0x1,0,0,      // ADC #$1
+    0x38,0,0,0,          // SEC
+    0xE9,0x2,0,0,      // SBC #$2
+   
+    
+   
+    
+   
+    
+   
+    
+    0,0,0,0,      // Stop
+   
+    
     0xA9,0x57,0,0,       // LDA #$57
     0x2A,0,0,0,         // ROL
     0x2A,0,0,0,         // ROL
@@ -107,9 +295,26 @@ do {
     
     //Prepare()
     
-    //SetVectors()
+    if (Peek(address: 0x17FF) != 0x1c)
+    {
+        print("Setting vectors")
+        SetVectors()
+    }
     
-    for step in Range(0...40)
+  //  Poke(address: 0x30, value: 1)
+  //  Poke(address: 0x31, value: 2)
+  //  Poke(address: 0x32, value: 3)
+  //  Poke(address: 0x33, value: 4)
+    
+    MOS6502.Write(address: 0x0, byte: 0)
+    MOS6502.Write(address: 0x1, byte: 0)
+    MOS6502.Write(address: 0x2, byte: 0)
+    MOS6502.Write(address: 0x3, byte: 0)
+    
+    
+    // run the tests
+    print("Running the tests")
+    for step in Range(0...32)
     {
     
         _ = LoadCode(offset : step)
@@ -173,7 +378,7 @@ func RunCodeVirtual(address: UInt16)
 {
     MOS6502.SetPC(ProgramCounter: address)
     let opcode = MOS6502.Step()
-    print(opcode.opcode)
+    print(opcode.opcode, String(format: "%02X",MOS6502.Read(address: address)) )
     print("vA: " + String(format: "%02X",MOS6502.getA()) + "  X: " + String(format: "%02X",MOS6502.getX()) + "  Y: " + String(format: "%02X",MOS6502.getY()) + "  Flags: " + StatusFlagToString(reg: MOS6502.GetStatusRegister()))
     
    
@@ -253,7 +458,7 @@ func Poke(address : UInt16, value : UInt8)
     // Send address, space
     // Send value, .
     
-    //print("Poke \(value) into \(address)");
+   //print("Poke \(value) into \(address)");
     
     do {
         
