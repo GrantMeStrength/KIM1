@@ -172,6 +172,138 @@ func Peek(address : UInt16) -> UInt8
 
 ```
 
-## Tuesday 9th, March 20201
+## Tuesday 9th, March 2021
 
 I added the ability to send a G to the PAL-1, the command which executes code. Then it was a matter of bringing over my 6502 emulation code into the project, generating a list of instructions to execute on the vritual and real CPUs, and finally parsing the results. Immediately I found an issue with the SBC instruction as I expected (looks like I messed up the Carry flag). So now I've an easy way to debug my opcodes against a real 6502 - so the next few evenings I can debug the 6502 and see if I get it to the point where it can run BASIC (so far my iPhone KIM-1 emulator won't run BASIC - and with these errors in the opcode emulator that's understandable!)
+
+## Thursday 11th, March 2021
+
+I got lazy writing tests to send to be executed side-by-side on the real and virtual 6502s, so I tried a little "fuzzing" and started sending random (but valid) opcodes to both systems. Given the state of the virtual memory systems (the PAL-1 has a lot of Zero Page stuff randomly present at start up) things quickly got out of sync and after several long runs I hadn't found any definitive broken implementations. However, even when I took the fixes from earlier in the week to SBC, ROR, BIT and the stack handler back into my Virtual Kim, it still wouldn't run BASIC. In fact, it was WORSE. 
+
+It seems like the best way to get BASIC working is to run it on both systems. This a pain, as it takes a long time to long BASIC into the PAL-1, but I can't see a way to avoid it. I think I will start with a short program. I'm seriously considering burning BASIC into a ROM so it can be accessed by the PAL-1 in some way, just to speed things up. Before I do, I'll try fuzzing a few more times, maybe starting by reading the PAL-1 zero page memory into the simulated system to keep them on track. These tests don't currently do much with the address modes, and I think that's when a real piece of code will start to show issues. (BTW, yes, I know there are some definitive test suites on GitHub, but it's tricky to extract what I actually could use from them.)
+
+Here's a sample run. Can you see the errors it turned up, and where it started going off the rails?
+
+```
+Fuzzing
+ROR $00      66
+vA: 00  X: 00  Y: 00  Flags: nv_bdiZc
+rA: 00  X: 00  Y: 00  Flags: nv_bdIZc
+ROR A        6A
+vA: 00  X: 00  Y: 00  Flags: nv_bdiZc
+rA: 00  X: 00  Y: 00  Flags: nv_bdIZc
+ADC ($00,X)  61
+vA: 00  X: 00  Y: 00  Flags: nv_bdiZc
+rA: 00  X: 00  Y: 00  Flags: nv_bdIZc
+EOR $0       45
+vA: 00  X: 00  Y: 00  Flags: nv_bdiZc
+rA: 00  X: 00  Y: 00  Flags: nv_bdIZc
+CMP ($00),X  C1
+vA: 00  X: 00  Y: 00  Flags: nv_bdiZC
+rA: 00  X: 00  Y: 00  Flags: nv_bdIZC
+BEQ $00      F0
+vA: 00  X: 00  Y: 00  Flags: nv_bdiZC
+rA: 00  X: 00  Y: 00  Flags: nv_bdIZC
+TYA          98
+vA: 00  X: 00  Y: 00  Flags: nv_bdiZC
+rA: 00  X: 00  Y: 00  Flags: nv_bdIZC
+ROL $0000,X  3E
+vA: 00  X: 00  Y: 00  Flags: nv_bdizc
+rA: 00  X: 00  Y: 00  Flags: nv_bdIzc
+SBC #$00     E9
+vA: FF  X: 00  Y: 00  Flags: nv_bdizc
+rA: FF  X: 00  Y: 00  Flags: nv_bdIzc
+CPY $0000    CC
+vA: FF  X: 00  Y: 00  Flags: nv_bdizc
+rA: FF  X: 00  Y: 00  Flags: nv_bdIzc
+BVC $0       50
+vA: FF  X: 00  Y: 00  Flags: nv_bdizc
+rA: FF  X: 00  Y: 00  Flags: nv_bdIzc
+INC $0000    EE
+vA: FF  X: 00  Y: 00  Flags: nv_bdizc
+rA: FF  X: 00  Y: 00  Flags: nv_bdIzc
+NOP          EA
+vA: FF  X: 00  Y: 00  Flags: nv_bdizc
+rA: FF  X: 00  Y: 00  Flags: nv_bdIzc
+DEC $00      C6
+vA: FF  X: 00  Y: 00  Flags: nv_bdizc
+rA: FF  X: 00  Y: 00  Flags: nv_bdIzc
+ADC #$00     69
+vA: FF  X: 00  Y: 00  Flags: nv_bdizc
+rA: FF  X: 00  Y: 00  Flags: nv_bdIzc
+DEC $00      CE
+vA: FF  X: 00  Y: 00  Flags: nv_bdiZc
+rA: FF  X: 00  Y: 00  Flags: nv_bdIZc
+CLD          D8
+vA: FF  X: 00  Y: 00  Flags: nv_bdiZc
+rA: FF  X: 00  Y: 00  Flags: nv_bdIZc
+LSR $00,X    56
+vA: FF  X: 00  Y: 00  Flags: nv_bdiZc
+rA: FF  X: 00  Y: 00  Flags: nv_bdIZc
+PHA          48
+vA: FF  X: 00  Y: 00  Flags: nv_bdiZc
+rA: FF  X: 00  Y: 00  Flags: nv_bdIZc
+EOR $0000,Y  59
+vA: FF  X: 00  Y: 00  Flags: nv_bdizc
+rA: FF  X: 00  Y: 00  Flags: nv_bdIzc
+STY $#0,X    94
+vA: FF  X: 00  Y: 00  Flags: nv_bdizc
+rA: FF  X: 00  Y: 00  Flags: nv_bdIzc
+TAY          A8
+vA: FF  X: 00  Y: FF  Flags: nv_bdizc
+rA: FF  X: 00  Y: FF  Flags: nv_bdIzc
+INY          C8
+vA: FF  X: 00  Y: 00  Flags: nv_bdiZc
+rA: FF  X: 00  Y: 00  Flags: nv_bdIZc
+CMP #$00     C9
+vA: FF  X: 00  Y: 00  Flags: nv_bdizC
+rA: FF  X: 00  Y: 00  Flags: nv_bdIzC
+DEC $0000,X  DE
+vA: FF  X: 00  Y: 00  Flags: nv_bdizC
+rA: FF  X: 00  Y: 00  Flags: nv_bdIzC
+STX $0       8E
+vA: FF  X: 00  Y: 00  Flags: nv_bdizC
+rA: FF  X: 00  Y: 00  Flags: nv_bdIzC
+ROL $00      26
+vA: FF  X: 00  Y: 00  Flags: nv_bdizc
+rA: FF  X: 00  Y: 00  Flags: nv_bdIzc
+CMP $00,X    D5
+vA: FF  X: 00  Y: 00  Flags: nv_bdizC
+rA: FF  X: 00  Y: 00  Flags: nv_bdIzC
+ASL          0A
+vA: FE  X: 00  Y: 00  Flags: nv_bdizC
+rA: FE  X: 00  Y: 00  Flags: nv_bdIzC
+TXA          8A
+vA: 00  X: 00  Y: 00  Flags: nv_bdiZC
+rA: 00  X: 00  Y: 00  Flags: nv_bdIZC
+OR $0000     0D
+vA: 01  X: 00  Y: 00  Flags: nv_bdizC
+rA: 01  X: 00  Y: 00  Flags: nv_bdIzC
+TSX          BA
+vA: 01  X: FC  Y: 00  Flags: nv_bdizC <- Pulled the stack pointer in, which wasn't the same it seems
+rA: 01  X: 01  Y: 00  Flags: nv_bdIzC
+ROL $00      26
+vA: 01  X: FC  Y: 00  Flags: nv_bdizc <- Now X is different
+rA: 01  X: 01  Y: 00  Flags: nv_bdIzc
+CMP ($00),Y  D1
+vA: 01  X: FC  Y: 00  Flags: nv_bdizC <- Now everything goes weird and the tests are pointless
+rA: 01  X: 01  Y: 00  Flags: nv_bdIzc
+CMP ($00),X  C1
+vA: 01  X: FC  Y: 00  Flags: nv_bdizc
+rA: 01  X: 01  Y: 00  Flags: nv_bdIzc
+PHP          08
+vA: 01  X: FC  Y: 00  Flags: nv_bdizc
+rA: 01  X: 01  Y: 00  Flags: nv_bdIzc
+LDA ($0,X)   A1
+vA: 03  X: FC  Y: 00  Flags: nv_bdizc
+rA: 03  X: 01  Y: 00  Flags: nv_bdIzc
+ROR $0000    6E
+vA: 03  X: FC  Y: 00  Flags: nv_bdizC
+rA: 03  X: 01  Y: 00  Flags: nv_bdIzC
+CMP $00      C5
+vA: 03  X: FC  Y: 00  Flags: nv_bdizC
+rA: 03  X: 01  Y: 00  Flags: nv_bdIzC
+SBC ($0000), F1
+vA: 03  X: FC  Y: 00  Flags: nv_bdizC
+rA: 03  X: 01  Y: 00  Flags: nv_bdIzC
+```

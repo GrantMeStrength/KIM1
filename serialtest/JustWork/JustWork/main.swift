@@ -19,6 +19,20 @@ private var MOS6502 = CPU()
 
 let code : [UInt8] = [
     
+    
+    // Set everything to a known state
+    
+    0xA9,0x0,0,0,      // LDA #$0
+    0xA2,0x0,0,0,      // LDX #$0
+    0xA0,0x0,0,0,      // LDY #$0
+    0x18,0,0,0,         // CLC
+    0xd8,0,0,0,         // CLD
+    0xb8,0,0,0,         // CLV
+    0xA9,1,0,0,
+    0x6A,0,0,0,
+    0,0,0,0,
+    
+    
     // BIT
     
     0xA9,0xAA,0,0,      // LDA #$0
@@ -300,27 +314,59 @@ do {
         print("Setting vectors")
         SetVectors()
     }
+    print("Setting initial values")
     
-  //  Poke(address: 0x30, value: 1)
-  //  Poke(address: 0x31, value: 2)
-  //  Poke(address: 0x32, value: 3)
-  //  Poke(address: 0x33, value: 4)
+    Poke(address: 0x201, value: 0)
+    Poke(address: 0x202, value: 0)
+    Poke(address: 0x203, value: 0)
+   
+  
+    
+    MOS6502.Write(address: 0x201, byte: 0)
+    MOS6502.Write(address: 0x202, byte: 0)
+    MOS6502.Write(address: 0x203, byte: 0)
+    
+    print("Copying Zero Page contents")
+    
+    for i:UInt16 in Range(0...16)
+    {
+       
+        let b = Peek(address : i)
+        MOS6502.Write(address: 0x0, byte: b)
+        print(i , " ", terminator: "")
+    }
+    
+    Poke(address: 0x0, value: 0)
+    Poke(address: 0x1, value: 0)
+    Poke(address: 0x2, value: 0)
     
     MOS6502.Write(address: 0x0, byte: 0)
     MOS6502.Write(address: 0x1, byte: 0)
     MOS6502.Write(address: 0x2, byte: 0)
-    MOS6502.Write(address: 0x3, byte: 0)
-    
+   
     
     // run the tests
     print("Running the tests")
-    for step in Range(0...32)
+    
+    for step in Range(0...5)
+    {
+        _ = LoadCode(offset : step)
+        _ = RunCodeVirtual(address: 0x200)
+        RunCode(address: 0x200) ; GetStatus() ; PrintStatus()
+    }
+    
+    print("Fuzzing")
+    for _ in Range(0...256)
     {
     
-        _ = LoadCode(offset : step)
-        RunCodeVirtual(address: 0x200)
-        RunCode(address: 0x200) ; GetStatus() ; PrintStatus()
+        _ = LoadCodeFuzz()
+      // _ = LoadCode(offset : step)
         
+        // Only try running the instruction if it is value i.e. the virtual CPU knows it exists
+        if  RunCodeVirtual(address: 0x200)
+        {
+            RunCode(address: 0x200) ; GetStatus() ; PrintStatus()
+        }
     }
     
     // Poke in the new values
@@ -374,14 +420,48 @@ func LoadCode(offset : Int) -> Bool
     return true
 }
 
-func RunCodeVirtual(address: UInt16)
+func LoadCodeFuzz() -> Bool
+{
+    // Pick an instruction at random and run it and see what happens
+    // Need to set flags and registers to known values to have a chance at
+    // this working, and probably memory too.
+    
+  
+    let n1 = UInt8.random(in: 0..<255)
+    // let n2 = 0// UInt8.random(in: 0..<255)
+    // let n3 = 0// UInt8.random(in: 0..<255)
+    
+    MOS6502.Write(address: 0x200, byte: n1)
+    Poke(address: 0x0200, value: n1)
+  
+   // MOS6502.Write(address: 0x201, byte: n2)
+   // Poke(address: 0x0201, value: n2)
+  
+   // MOS6502.Write(address: 0x202, byte: n3)
+   // Poke(address: 0x0202, value: n3)
+  
+   // MOS6502.Write(address: 0x203, byte: 0)
+   // Poke(address: 0x0203, value: 0)
+  
+    
+    return true
+}
+
+
+func RunCodeVirtual(address: UInt16) -> Bool
 {
     MOS6502.SetPC(ProgramCounter: address)
     let opcode = MOS6502.Step()
+    
+    if opcode.address == 0xffff
+    {
+        return false
+    }
+    
     print(opcode.opcode, String(format: "%02X",MOS6502.Read(address: address)) )
     print("vA: " + String(format: "%02X",MOS6502.getA()) + "  X: " + String(format: "%02X",MOS6502.getX()) + "  Y: " + String(format: "%02X",MOS6502.getY()) + "  Flags: " + StatusFlagToString(reg: MOS6502.GetStatusRegister()))
     
-   
+   return true
 }
 
 

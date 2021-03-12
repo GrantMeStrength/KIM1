@@ -272,7 +272,10 @@ class CPU {
         KIM_ROM_Code(address: PC)
         
         // Execute the instruction at PC
-        Execute()
+        if !Execute()
+        {
+            PC = 0xffff
+        }
         //RUNTIME_DEBUG_MESSAGES = true
         // Optional - display debug information using RUNTIME_DEBUG_MESSAGES to trigger debug information display
         if RUNTIME_DEBUG_MESSAGES
@@ -283,7 +286,7 @@ class CPU {
             }
         }
         
-        
+        // Special case = if a garbage instructinon PC will be 0xffff
         return (PC, breakpoint, statusmessage, dataToDisplay)
     }
     
@@ -465,7 +468,7 @@ class CPU {
         return PC
     }
     
-    func Execute()
+    func Execute() -> Bool
     {
         // Use the PC to read the instruction (and other data if required) and
         // execute the instruction.
@@ -476,10 +479,10 @@ class CPU {
         
         //Dump(opcode: ins) // Debugging information.
         
-        ProcessInstruction(instruction: ins)
+       return ProcessInstruction(instruction: ins)
     }
     
-    func ProcessInstruction(instruction : UInt8)
+    func ProcessInstruction(instruction : UInt8) -> Bool
     {
         
         switch instruction {
@@ -545,6 +548,7 @@ class CPU {
         case 0x48 : PHA()
         case 0x49 : EOR_i()
         case 0x4A : LSR_i()
+            
             
         case 0x4C : JMP_ABS()
         case 0x4D : EOR_a()
@@ -716,9 +720,11 @@ class CPU {
         case 0xFD : SBC_indexed_x()
         case 0xFE : INC_ax()
             
-        default : print("**********************      Unknown instruction (or garbage): " + String(  format: "%02X", instruction) + " at " + String(  format: "%04X", PC) + "   **********************");
+        default : /*print("**********************      Unknown instruction (or garbage): " + String(  format: "%02X", instruction) + " at " + String(  format: "%04X", PC) + "   **********************");*/  return false
             
         }
+        
+        return true
     }
     
     
@@ -800,7 +806,7 @@ class CPU {
         let ad = memory.ReadAddress(address: PC) ; PC = PC + 1
         let v = memory.ReadAddress(address: UInt16(ad))
         
-        print("Zero page addition. Adding contents of \(ad) which is \(v) to A \(A_REGISTER)")
+        //print("Zero page addition. Adding contents of \(ad) which is \(v) to A \(A_REGISTER)")
         
         A = addC(A,v, carry: CARRY_FLAG)
         prn("ADC $"+String(format: "%04X",v))
@@ -812,12 +818,12 @@ class CPU {
         let ad = (UInt16(zp) + UInt16(X)) & 0xff
         let v = memory.ReadAddress(address: ad)
         
-        let oldA = A
+        //let oldA = A
         
         
         A = addC(A,v, carry: CARRY_FLAG)
         
-        print("Zero page indexed addition. Adding contents of \(ad) which is \(v) taken from at \(zp) + \(X) to A \(oldA) to get \(A)")
+        //print("Zero page indexed addition. Adding contents of \(ad) which is \(v) taken from at \(zp) + \(X) to A \(oldA) to get \(A)")
        
         
         prn("ADC $"+String(zp, radix: 16)+",X")
