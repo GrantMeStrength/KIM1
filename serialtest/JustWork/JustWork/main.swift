@@ -14,6 +14,15 @@ var A_REGISTER : UInt8 = 0
 var X_REGISTER : UInt8 = 0
 var Y_REGISTER : UInt8 = 0
 
+var vResult = ""
+var aResult = ""
+
+
+let TESTING = false
+
+private var PROGRAM_COUNTER : UInt16 = 0x200
+private var HIT_BRK = false
+
 
 private var MOS6502 = CPU()
 
@@ -22,12 +31,23 @@ let code : [UInt8] = [
     
     // Set everything to a known state
     
-    0xA9,0x0,0,0,      // LDA #$0
-    0xA2,0x0,0,0,      // LDX #$0
-    0xA0,0x0,0,0,      // LDY #$0
     0x18,0,0,0,         // CLC
     0xd8,0,0,0,         // CLD
     0xb8,0,0,0,         // CLV
+    
+    0xA9,0x0,0,0,      // LDA #$0
+    0xA2,0x0,0,0,      // LDX #$0
+    0xA0,0x0,0,0,      // LDY #$0
+    
+    // Test indexed-indirect
+    0xA2,0x2,0,0,      // LDX #$2
+    0xA1,0x10,0,0,      // LDA (#$10,X)
+   
+    
+    
+   
+    
+   
     0xA9,1,0,0,
     0x6A,0,0,0,
     0,0,0,0,
@@ -284,6 +304,22 @@ let code : [UInt8] = [
                       
 ]
 
+let pre_program : [UInt8] = [
+    0x18,        // CLC
+    0xd8,         // CLD
+    0xb8,         // CLV
+    
+    0xA9,0x0,      // LDA #$0
+    0xA2,0x0,     // LDX #$0
+    0xA0,0x0,      // LDY #$0
+    
+    0x0,            // brk
+]
+
+let program : [UInt8] = [0xA2, 0x0D, 0xBD, 0xCC, 0x02, 0x95, 0xD5, 0xCA, 0x10, 0xF8, 0xA2, 0x05, 0xA0, 0x01, 0xF8, 0x18, 0xB5, 0xD5, 0x75, 0xD7, 0x95, 0xD5, 0xCA, 0x88, 0x10, 0xF6, 0xB5, 0xD8, 0x10, 0x02, 0xA9, 0x99, 0x75, 0xD5, 0x95, 0xD5, 0xCA, 0x10, 0xE5, 0xA5, 0xD5, 0x10, 0x0D, 0xA9, 0x00, 0x85, 0xE2, 0xA2, 0x02, 0x95, 0xD5, 0x95, 0xDB, 0xCA, 0x10, 0xF9, 0x38, 0xA5, 0xE0, 0xE5, 0xDD, 0x85, 0xE0, 0xA2, 0x01, 0xB5, 0xDE, 0xE9, 0x00, 0x95, 0xDE, 0xCA, 0x10, 0xF7, 0xB0, 0x0C, 0xA9, 0x00, 0xA2, 0x03, 0x95, 0xDD, 0xCA, 0x10, 0xFB, 0x20, 0xBD, 0x02, 0xA5, 0xDE, 0xA6, 0xDF, 0x09, 0xF0, 0xA4, 0xE1, 0xF0, 0x20, 0xF0, 0x9C, 0xF0, 0xA4, 0xA2, 0xFE, 0xA0, 0x5A, 0x18, 0xA5, 0xD9, 0x69, 0x05, 0xA5, 0xD8, 0x69, 0x00, 0xB0, 0x04, 0xA2, 0xAD, 0xA0, 0xDE, 0x98, 0xA4, 0xE2, 0xF0, 0x04, 0xA5, 0xD5, 0xA6, 0xD6, 0x85, 0xFB, 0x86, 0xFA, 0xA5, 0xD9, 0xA6, 0xD8, 0x10, 0x05, 0x38, 0xA9, 0x00, 0xE5, 0xD9, 0x85, 0xF9, 0xA9, 0x02, 0x85, 0xE3, 0xD8, 0x20, 0x1F, 0x1F, 0x20, 0x6A, 0x1F, 0xC9, 0x13, 0xF0, 0xC0, 0xB0, 0x03, 0x20, 0xAD, 0x02, 0xC6, 0xE3, 0xD0, 0xED, 0xF0, 0xB7, 0xC9, 0x0A, 0x90, 0x05, 0x49, 0x0F, 0x85, 0xE1, 0x60, 0xAA, 0xA5, 0xDD, 0xF0, 0xFA, 0x86, 0xDD, 0xA5, 0xDD, 0x38, 0xF8, 0xE9, 0x05, 0x85, 0xDC, 0xA9, 0x00, 0xE9, 0x00, 0x85, 0xDB, 0x60, 0x45, 0x01, 0x00, 0x99, 0x81, 0x00, 0x99, 0x97, 0x02, 0x08, 0x00, 0x00, 0x01, 0x01] //
+
+
+
 print("Setting up virtual CPU")
 MOS6502.Init(ProgramName: "Tester") // One instruction at a time, stepping four bytes
     
@@ -306,6 +342,11 @@ do {
     usleep(200000)
     
     // Run code
+    
+    if TESTING
+    {
+        
+    
     
     //Prepare()
     
@@ -330,22 +371,31 @@ do {
     
     for i:UInt16 in Range(0...16)
     {
-       
+
         let b = Peek(address : i)
         MOS6502.Write(address: 0x0, byte: b)
         print(i , " ", terminator: "")
     }
     
-    Poke(address: 0x0, value: 0)
-    Poke(address: 0x1, value: 0)
-    Poke(address: 0x2, value: 0)
-    
-    MOS6502.Write(address: 0x0, byte: 0)
-    MOS6502.Write(address: 0x1, byte: 0)
-    MOS6502.Write(address: 0x2, byte: 0)
-   
+//    Poke(address: 0x10, value: 0x40)
+//    Poke(address: 0x11, value: 0x50)
+//    Poke(address: 0x12, value: 0x60)
+//
+//    Poke(address: 0x40, value: 0x1)
+//    Poke(address: 0x50, value: 0x2)
+//    Poke(address: 0x60, value: 0x3)
+//
+//    MOS6502.Write(address: 0x10, byte: 0x40)
+//    MOS6502.Write(address: 0x11, byte: 0x50)
+//    MOS6502.Write(address: 0x12, byte: 0x60)
+//
+//    MOS6502.Write(address: 0x40, byte: 0x1)
+//    MOS6502.Write(address: 0x50, byte: 0x2)
+//    MOS6502.Write(address: 0x60, byte: 0x3)
+//
     
     // run the tests
+    print()
     print("Running the tests")
     
     for step in Range(0...5)
@@ -353,37 +403,102 @@ do {
         _ = LoadCode(offset : step)
         _ = RunCodeVirtual(address: 0x200)
         RunCode(address: 0x200) ; GetStatus() ; PrintStatus()
+    
+        _ = DiffStatus()
+    
     }
     
     print("Fuzzing")
-    for _ in Range(0...256)
+    for _ in Range(0...1024)
     {
     
         _ = LoadCodeFuzz()
       // _ = LoadCode(offset : step)
         
         // Only try running the instruction if it is value i.e. the virtual CPU knows it exists
-        if  RunCodeVirtual(address: 0x200)
+        if  0xffff != RunCodeVirtual(address: 0x200)
         {
             RunCode(address: 0x200) ; GetStatus() ; PrintStatus()
+            
+         if   !DiffStatus()
+         {
+            // Error occured - can reset flags and regs
+            
+            print("Resetting")
+            for step in Range(0...5)
+            {
+                _ = LoadCode(offset : step)
+                _ = RunCodeVirtual(address: 0x200)
+                RunCode(address: 0x200) ; GetStatus() ; PrintStatus()
+                print(5-step , " ", terminator: "")
+            
+            }
+            
+            print()
+            
+            
+         }
+            
+            
+            
         }
     }
+        
+    }
+    else
+    {
+        print("Executing")
+        
+        // Load the pre-program to get to known state
+        
+        
+        for step in 0..<pre_program.count
+        {
+            print(pre_program.count-step)
+            Poke(address: UInt16(0x200 + step), value: pre_program[step])
+            MOS6502.Write(address: UInt16(0x200 + step), byte: pre_program[step])
+        }
+        
+        print("Pre program")
+        PROGRAM_COUNTER = 0x200
+        while HIT_BRK == false  {
     
-    // Poke in the new values
-    /*
-    Poke(address: 0x200, value: 10)
-    Poke(address: 0x201, value: 20)
-    Poke(address: 0x202, value: 30)
+        print("Program counter: ",String(format: "%04X", PROGRAM_COUNTER))
+        RunCode(address: PROGRAM_COUNTER) ; GetStatus() ; PrintStatus()
+        PROGRAM_COUNTER = RunCodeVirtual(address: PROGRAM_COUNTER)
+           
+        _ = DiffStatus()
+        
+      
+        }
+        
+        
+        print("The program")
+        HIT_BRK = false
+        PROGRAM_COUNTER = 0x200
+       // for step in 0..<16
+        for step in 0..<program.count
+        {
+            print(program.count-step)
+             Poke(address: UInt16(0x200 + step), value: program[step])
+             MOS6502.Write(address: UInt16(0x200 + step), byte: program[step])
+        }
+       
+        
+        while HIT_BRK == HIT_BRK  {
     
-    // Peek them back out to confirm
-    
-    _ = Peek(address: 0x0200)
-    usleep(200000)
-    _ = Peek(address: 0x0201)
-    usleep(200000)
-    _ = Peek(address: 0x0202)
-    usleep(200000)
-   */
+            print("Program counter: ",String(format: "%04X", PROGRAM_COUNTER))
+            RunCode(address: PROGRAM_COUNTER) ; GetStatus() ; PrintStatus()
+            PROGRAM_COUNTER = RunCodeVirtual(address: PROGRAM_COUNTER)
+          
+            
+        _ = DiffStatus()
+        
+      
+        }
+        
+    }
+  
     print("End")
    
 } catch PortError.failedToOpen {
@@ -392,10 +507,28 @@ do {
     print("Error: \(error)")
 }
 
+func DiffStatus() -> Bool
+{
+    
+    if (aResult == vResult)
+    {
+        print("a"+aResult)
+        print("v"+vResult)
+        print()
+        return true
+    }
+    else
+    {
+        print("a"+aResult)
+        print("v"+vResult + "⚠️")
+        return false
+    }
+    
+}
 
 func PrintStatus()
 {
-    print("rA: " + String(format: "%02X",A_REGISTER) + "  X: " + String(format: "%02X",X_REGISTER) + "  Y: " + String(format: "%02X",Y_REGISTER) + "  Flags: " + StatusFlagToString(reg: STATUS_REGISTER))
+    aResult = "A: " + String(format: "%02X",A_REGISTER) + "  X: " + String(format: "%02X",X_REGISTER) + "  Y: " + String(format: "%02X",Y_REGISTER) + "  Flags: " + StatusFlagToString(reg: STATUS_REGISTER)
     
 }
 
@@ -426,8 +559,16 @@ func LoadCodeFuzz() -> Bool
     // Need to set flags and registers to known values to have a chance at
     // this working, and probably memory too.
     
-  
+    // Let's try family of instructions
+    
+    
     let n1 = UInt8.random(in: 0..<255)
+    
+    // Naw sucks - always a branch or something to mess
+    // things up.
+   
+
+    
     // let n2 = 0// UInt8.random(in: 0..<255)
     // let n3 = 0// UInt8.random(in: 0..<255)
     
@@ -448,20 +589,26 @@ func LoadCodeFuzz() -> Bool
 }
 
 
-func RunCodeVirtual(address: UInt16) -> Bool
+func RunCodeVirtual(address: UInt16) -> UInt16
 {
     MOS6502.SetPC(ProgramCounter: address)
     let opcode = MOS6502.Step()
     
     if opcode.address == 0xffff
     {
-        return false
+        return opcode.address
+    }
+    
+    if opcode.Break == true
+    {
+        HIT_BRK = true
     }
     
     print(opcode.opcode, String(format: "%02X",MOS6502.Read(address: address)) )
-    print("vA: " + String(format: "%02X",MOS6502.getA()) + "  X: " + String(format: "%02X",MOS6502.getX()) + "  Y: " + String(format: "%02X",MOS6502.getY()) + "  Flags: " + StatusFlagToString(reg: MOS6502.GetStatusRegister()))
     
-   return true
+    vResult =  "A: " + String(format: "%02X",MOS6502.getA()) + "  X: " + String(format: "%02X",MOS6502.getX()) + "  Y: " + String(format: "%02X",MOS6502.getY()) + "  Flags: " + StatusFlagToString(reg: MOS6502.GetStatusRegister())
+    
+   return opcode.address
 }
 
 
@@ -621,7 +768,8 @@ func StatusFlagToString(reg : UInt8) -> String
     flags = flags + "_"
     if BREAK_FLAG { flags = flags + "B" } else { flags = flags + "b" }
     if DECIMAL_MODE { flags = flags + "D" } else { flags = flags + "d" }
-    if INTERRUPT_DISABLE { flags = flags + "I" } else {flags = flags + "i"}
+   // if INTERRUPT_DISABLE { flags = flags + "I" } else {flags = flags + "i"}
+    flags = flags + "i"
     if ZERO_FLAG { flags = flags + "Z"} else {flags = flags + "z"}
     if CARRY_FLAG { flags = flags + "C"} else {flags = flags + "c"}
     

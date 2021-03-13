@@ -172,11 +172,11 @@ func Peek(address : UInt16) -> UInt8
 
 ```
 
-## Tuesday 9th, March 2021
+## Tuesday, 9th March 2021
 
 I added the ability to send a G to the PAL-1, the command which executes code. Then it was a matter of bringing over my 6502 emulation code into the project, generating a list of instructions to execute on the vritual and real CPUs, and finally parsing the results. Immediately I found an issue with the SBC instruction as I expected (looks like I messed up the Carry flag). So now I've an easy way to debug my opcodes against a real 6502 - so the next few evenings I can debug the 6502 and see if I get it to the point where it can run BASIC (so far my iPhone KIM-1 emulator won't run BASIC - and with these errors in the opcode emulator that's understandable!)
 
-## Thursday 11th, March 2021
+## Thursday, 11th March 2021
 
 I got lazy writing tests to send to be executed side-by-side on the real and virtual 6502s, so I tried a little "fuzzing" and started sending random (but valid) opcodes to both systems. Given the state of the virtual memory systems (the PAL-1 has a lot of Zero Page stuff randomly present at start up) things quickly got out of sync and after several long runs I hadn't found any definitive broken implementations. However, even when I took the fixes from earlier in the week to SBC, ROR, BIT and the stack handler back into my Virtual Kim, it still wouldn't run BASIC. In fact, it was WORSE. 
 
@@ -307,3 +307,10 @@ SBC ($0000), F1
 vA: 03  X: FC  Y: 00  Flags: nv_bdizC
 rA: 03  X: 01  Y: 00  Flags: nv_bdIzC
 ```
+## Frdiay, 12th March 2021
+
+As I watching some more fuzzing runs, the lack of speed of using a 1200 bps serial link was getting me down. Then I remembered I had built another 6502 based system - the [RC6502](https://github.com/tebl/RC6502-Apple-1-Replica) - and it connected via an Arduino acting as a Serial -> USB port. This ran at a blisteringly fast 9600 BPS, and the USB port might be more reliable I figured. However, the downside is that RC6502 runs WozMon rather than the KIM monitor, so I would have to rewrite things. 
+
+But way worse: the WozMon lacks one key feature of the KIM - the SST switch. When ON, this switch introduces a BRK or NMI after every opcode is executed, via hardware. It's a useful debugging feature for the KIM, as it allows single-stepping through code. Thanks to this mode, I was able to adapt my Mac test program to run a real 6502 app side-by-side on the CPUs rather than test individual instructions - and still check status after each one is executed. (On a WozMon system, the code would would start an opcode.. and then the 6502 keep going, making it impossible to test for differences.)
+
+After updating the code, I was able to run [Lunar Lander](https://github.com/jefftranter/6502/tree/master/asm/KIM-1/TheFirstBookOfKIM/Games/Lunar%20Lander) this way, and once again the wretched flags for the ADC and SBC code sparked some error messages. At least I can do my best to correct these in a real app now. Maybe I will then be able to work up to testing BASIC and find out why that program doesn't work (it will take literally hours to load BASIC so I'd rather find my bugs in smalled programs if I can!). The dream of a working KIM simulator is getting closer :-)

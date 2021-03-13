@@ -19,12 +19,17 @@
 // CMP seems ok
 // BIT Fixed
 
+// Phase 1.1
+
+// (zp,x) addressing issue fixed
+// (Not sure about ADC)
+
 import Foundation
 
 
 // Registers and flags
 private var PC : UInt16 = 0x1c22
-private var SP : UInt8 = 0xfd
+private var SP : UInt8 = 0xfe // of fd?
 private var A : UInt8 = 0
 private var X : UInt8 = 0
 private var Y : UInt8 = 0
@@ -36,6 +41,8 @@ private var DECIMAL_MODE : Bool = false
 private var NEGATIVE_FLAG : Bool = false
 private var BREAK_FLAG : Bool = false
 private var RUNTIME_DEBUG_MESSAGES : Bool = false
+
+private var DEFAULT_SP : UInt8 = 0xFE
 
 private var kim_keyActive : Bool = false           // Used when providing KIM-1 keyboard support
 private var kim_keyNumber : UInt8 = 0xff
@@ -79,7 +86,7 @@ class CPU {
         A = 0
         X = 0
         Y = 0
-        SP = 0xFD
+        SP = DEFAULT_SP
         PC = getAddress(0x17FC) //PC = getAddress(0xFFFC)
         INTERRUPT_DISABLE = true
     }
@@ -118,8 +125,9 @@ class CPU {
         let h = UInt8(PC >> 8); push(h)
         let l = UInt8(PC & 0x00FF); push(l)
         push(GetStatusRegister())
-        INTERRUPT_DISABLE = true
+       // INTERRUPT_DISABLE = true // yeah not really
         PC = getAddress(0x17FA)
+        breakpoint = true
         prn("BRK")
     }
     
@@ -253,7 +261,7 @@ class CPU {
     func Init(ProgramName : String)
     {
         PC = 0x1c22                                         // PC default - can be changed in UI code for debugging purposes
-        SP = 0xFD                                           // Stack Pointer initial value
+        SP = DEFAULT_SP                                           // Stack Pointer initial value
         memory.InitMemory(SoftwareToLoad: ProgramName)     // Create 64K of memory and populate it with ROM images. 
     }
     
@@ -302,7 +310,7 @@ class CPU {
         KIM_ROM_Code(address: PC)
         
         // Execute the instruction at PC
-        Execute()
+        _ = Execute()
         
         let returnString = texttodisplay
         texttodisplay = ""
@@ -487,7 +495,7 @@ class CPU {
         
         switch instruction {
         
-        case 0: BRK() ;
+        case 0: BRK() 
         case 1: OR_indexed_indirect_x()
             
         case 5: OR_z()
@@ -801,6 +809,14 @@ class CPU {
         prn("ADC #$"+String(format: "%02X",v))
     }
     
+    func  ADC_indexed_indirect_x() // 61
+    {
+        let za = memory.ReadAddress(address: PC);
+        let v = get_indexed_indirect_zp_x()
+        A = addC(A,v, carry: CARRY_FLAG)
+        prn("ADC ($"+String(format: "%02X",za)+",X)")
+    }
+    
     func  ADC_z() // 65
     {
         let ad = memory.ReadAddress(address: PC) ; PC = PC + 1
@@ -856,7 +872,7 @@ class CPU {
     func  ADC_indirect_indexed_y() // 71
     {
         let zp = UInt16(memory.ReadAddress(address: PC));
-        let v = memory.ReadAddress(address: getIndirectIndexedBase())
+        let v = get_indexed_indirect_zp_x()
         A = addC(A,v, carry: CARRY_FLAG)
         // test
         //A = 0x59
@@ -864,13 +880,7 @@ class CPU {
     }
     
     
-    func  ADC_indexed_indirect_x() // 61
-    {
-        let za = memory.ReadAddress(address: PC);
-        let v = get_indexed_indirect()
-        A = addC(A,v, carry: CARRY_FLAG)
-        prn("ADC ($"+String(format: "%02X",za)+",X)")
-    }
+   
     
     // Accumulator Subtraction
     
@@ -936,7 +946,7 @@ class CPU {
     func SBC_indexed_indirect_x() // E1
     {
         let za = memory.ReadAddress(address: PC );
-        let v = get_indexed_indirect()
+        let v = get_indexed_indirect_zp_x()
         A = subC(A,v)
         prn("SBC ($"+String(format: "%04X",za)+",X)")
     }
@@ -1096,10 +1106,10 @@ class CPU {
         prn("CMP ($"+String(format: "%02X",zp)+"),Y")
     }
     
-    func CMP_indexed_indirect_x()
+    func CMP_indexed_indirect_x() // c1
     {
         let za = memory.ReadAddress(address: PC);
-        let v = get_indexed_indirect()
+        let v = get_indexed_indirect_zp_x()
         let result = Int16(A) - Int16(v)
         if A >= UInt8(v & 0xFF) { CARRY_FLAG = true } else { CARRY_FLAG = false }
         if A == UInt8(v & 0xFF) { ZERO_FLAG = true } else { ZERO_FLAG = false }
@@ -1162,6 +1172,7 @@ class CPU {
         prn("LDA $"+String(format: "%04X",ad)+",Y")
     }
     
+
     func  LDA_indirect_indexed_y() // B1
     {
         let za = memory.ReadAddress(address: PC)
@@ -1174,8 +1185,10 @@ class CPU {
     
     func  LDA_indexed_indirect_x() // A1
     {
+        // ZP points to a location, get it. It's the base address. Add X to it, look inside this combined address
+        // e.g. 10 contains 40, X contains 2. LDA (10,x) will load A with contents of (40+2) = what is inside 42.
         let za = memory.ReadAddress(address: PC);
-        A = get_indexed_indirect()
+        A = get_indexed_indirect_zp_x()
         // test
         //A = 0x01
         SetFlags(value: A)
@@ -1231,11 +1244,17 @@ class CPU {
     func  STA_indexed_indirect_x() // 81
     {
         let za = memory.ReadAddress(address: PC);
-        let ad = UInt16((UInt16(za) + UInt16(X)) & 0x00ff)
-        let lowadr = UInt16(memory.ReadAddress(address: ad))
-        let highadr = UInt16(memory.ReadAddress(address: ad+1))
-        let fullad = highadr << 8 + lowadr
-        memory.WriteAddress(address: fullad, value: A)
+        let adr = get_indexed_indirect_zp_x_address()
+//        let za = memory.ReadAddress(address: PC);
+//        let ad = UInt16((UInt16(za) + UInt16(X)) & 0x00ff)
+//        let lowadr = UInt16(memory.ReadAddress(address: ad))
+//        let highadr = UInt16(memory.ReadAddress(address: ad+1))
+//        let fullad = highadr << 8 + lowadr
+      //  memory.WriteAddress(address: fullad, value: A)
+        
+        memory.WriteAddress(address: UInt16(adr), value: A)
+         
+        
         prn("STA ($"+String(format: "%02X",za)+"),X")
     }
     
@@ -1388,7 +1407,7 @@ class CPU {
     func  AND_indexed_indirect_x() // 21
     {
         let za = memory.ReadAddress(address: PC);
-        let v = get_indexed_indirect()
+        let v = get_indexed_indirect_zp_x()
         A = A & v
         SetFlags(value: A)
         prn("AND ($"+String(format: "%02X",za)+",X)")
@@ -1397,7 +1416,7 @@ class CPU {
     func  AND_indirect_indexed_y() // 31
     {
         let za = memory.ReadAddress(address: PC)
-        let v = memory.ReadAddress(address: getIndirectIndexedBase())
+        let v = get_indexed_indirect_zp_x()
         A = A & v
         SetFlags(value: A)
         prn("AND ($"+String(format: "%02X",za)+"),Y")
@@ -1517,7 +1536,7 @@ class CPU {
     func  OR_indexed_indirect_x() // 01
     {
         let za = memory.ReadAddress(address: PC);
-        let v = get_indexed_indirect()
+        let v = get_indexed_indirect_zp_x()
         A = A | v
         SetFlags(value: A)
         prn("OR ($"+String(format: "%02X",za)+",X)")
@@ -1590,7 +1609,7 @@ class CPU {
     func  EOR_indexed_indirect_x() // 41
     {
         let za = memory.ReadAddress(address: PC );
-        let v = get_indexed_indirect()
+        let v = get_indexed_indirect_zp_x()
         A = A ^ v
         SetFlags(value: A)
         prn("EOR ($"+String(format: "%02X",za)+",X)")
@@ -1599,7 +1618,7 @@ class CPU {
     func  EOR_indirect_indexed_y() // 51
     {
         let za = memory.ReadAddress(address: PC)
-        let v = memory.ReadAddress(address: getIndirectIndexedBase())
+        let v = get_indexed_indirect_zp_x()
         A = A ^ v
         // test
         // A = 0x20
@@ -2350,24 +2369,40 @@ class CPU {
 //        return adr
     }
     
-    func get_indexed_indirect() -> UInt8
+//    func get_indexed_indirect() -> UInt8
+//    {
+//        /* This mode is only used with the X register. Consider a situation where the instruction is LDA ($20,X), X contains $04, and memory at $24 contains 0024: 74 20, First, X is added to $20 to get $24. The target address will be fetched from $24 resulting in a target address of $2074. Register A will be loaded with the contents of memory at $2074.
+//
+//         If X + the immediate byte will wrap around to a zero-page address. So you could code that like targetAddress = (X + opcode[1]) & 0xFF .
+//
+//         */
+//
+//        let za = memory.ReadAddress(address: PC + UInt16(X)); PC = PC + 1
+//        let ad = UInt16((UInt16(za) + UInt16(X)) & 0x00ff)
+//        let lowadr = UInt16(memory.ReadAddress(address: ad))
+//        let highadr = UInt16(memory.ReadAddress(address: ad+1))
+//        let fullad = highadr << 8 + lowadr
+//        return memory.ReadAddress(address: fullad)
+//
+//    }
+
+    // Corrected
+    
+    func get_indexed_indirect_zp_x_address() -> UInt8
     {
-        /* This mode is only used with the X register. Consider a situation where the instruction is LDA ($20,X), X contains $04, and memory at $24 contains 0024: 74 20, First, X is added to $20 to get $24. The target address will be fetched from $24 resulting in a target address of $2074. Register A will be loaded with the contents of memory at $2074.
+        let zp =  memory.ReadAddress(address: PC) ; PC = PC + 1
+        let base = (zp + X) & 0xff
+        let adr = memory.ReadAddress(address: UInt16(base))
          
-         If X + the immediate byte will wrap around to a zero-page address. So you could code that like targetAddress = (X + opcode[1]) & 0xFF .
-         
-         */
-        
-        let za = memory.ReadAddress(address: PC + UInt16(X)); PC = PC + 1
-        let ad = UInt16((UInt16(za) + UInt16(X)) & 0x00ff)
-        let lowadr = UInt16(memory.ReadAddress(address: ad))
-        let highadr = UInt16(memory.ReadAddress(address: ad+1))
-        let fullad = highadr << 8 + lowadr
-        return memory.ReadAddress(address: fullad)
-        
+        return adr
     }
     
-    
+    func get_indexed_indirect_zp_x() -> UInt8
+    {
+              
+        return memory.ReadAddress(address: UInt16(get_indexed_indirect_zp_x_address() ))
+    }
+
     func push(_ v : UInt8)
     {
         memory.WriteAddress(address: UInt16(0x100 + UInt16(SP)), value: v)
