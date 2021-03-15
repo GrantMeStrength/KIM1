@@ -24,6 +24,12 @@
 // (zp,x) addressing issue fixed
 // (Not sure about ADC)
 
+// Phase 1.2
+// Corrected ADC SBC for all valid BCD values. Hint: that isn't 100%
+
+// Phase 1.3
+// Corrected some addressing mode shennanighans
+
 import Foundation
 
 
@@ -262,7 +268,10 @@ class CPU {
     {
         PC = 0x1c22                                         // PC default - can be changed in UI code for debugging purposes
         SP = DEFAULT_SP                                           // Stack Pointer initial value
-        memory.InitMemory(SoftwareToLoad: ProgramName)     // Create 64K of memory and populate it with ROM images. 
+        memory.InitMemory(SoftwareToLoad: ProgramName)     // Create 64K of memory and populate it with ROM images.
+        // Added to this implementation
+        memory.injectROM()
+        
     }
     
     // Execute one instruction - called by both single-stepping AND by running from the UI code.
@@ -495,7 +504,7 @@ class CPU {
         
         switch instruction {
         
-        case 0: BRK() 
+        case 0: BRK()
         case 1: OR_indexed_indirect_x()
             
         case 5: OR_z()
@@ -1189,8 +1198,6 @@ class CPU {
         // e.g. 10 contains 40, X contains 2. LDA (10,x) will load A with contents of (40+2) = what is inside 42.
         let za = memory.ReadAddress(address: PC);
         A = get_indexed_indirect_zp_x()
-        // test
-        //A = 0x01
         SetFlags(value: A)
         prn("LDA ($"+String(za, radix: 16)+",X)")
     }
@@ -2329,10 +2336,7 @@ class CPU {
         push(UInt8(h))
         push(UInt8(l))
         
-        
         PC = target
-        
-        //   print("                  JSR to " + String(format: "%04X",target) + " and returning to " + String(format: "%04X",(h<<8) + l))
         
         prn("JSR $" + String(format: "%04X",target))
     }
@@ -2353,13 +2357,14 @@ class CPU {
     
     func getIndirectIndexedBase() -> UInt16
     {
+        // Bugged - accidentally did the wrong thing and made it like (indirect,X)
         /*
          This mode is only used with the Y register. It differs in the order that Y is applied to the indirectly fetched address. An example instruction that uses indirect index addressing is LDA ($86),Y . To calculate the target address, the CPU will first fetch the address stored at zero page location $86. That address will be added to register Y to get the final target address. For LDA ($86),Y, if the address stored at $86 is $4028 (memory is 0086: 28 40, remember little endian) and register Y contains $10, then the final target address would be $4038. Register A will be loaded with the contents of memory at $4038.
          */
         
         let zp = UInt16(memory.ReadAddress(address: PC)); PC = PC + 1
-        let target = zp + UInt16(Y)
-        let addr = getAddress(target)
+        
+        let addr = getAddress(zp) + UInt16(Y)
         return addr
         
 //        let zp = UInt16(memory.ReadAddress(address: PC)); PC = PC + 1
@@ -2369,38 +2374,24 @@ class CPU {
 //        return adr
     }
     
-//    func get_indexed_indirect() -> UInt8
-//    {
-//        /* This mode is only used with the X register. Consider a situation where the instruction is LDA ($20,X), X contains $04, and memory at $24 contains 0024: 74 20, First, X is added to $20 to get $24. The target address will be fetched from $24 resulting in a target address of $2074. Register A will be loaded with the contents of memory at $2074.
-//
-//         If X + the immediate byte will wrap around to a zero-page address. So you could code that like targetAddress = (X + opcode[1]) & 0xFF .
-//
-//         */
-//
-//        let za = memory.ReadAddress(address: PC + UInt16(X)); PC = PC + 1
-//        let ad = UInt16((UInt16(za) + UInt16(X)) & 0x00ff)
-//        let lowadr = UInt16(memory.ReadAddress(address: ad))
-//        let highadr = UInt16(memory.ReadAddress(address: ad+1))
-//        let fullad = highadr << 8 + lowadr
-//        return memory.ReadAddress(address: fullad)
-//
-//    }
 
     // Corrected
     
-    func get_indexed_indirect_zp_x_address() -> UInt8
+    func get_indexed_indirect_zp_x_address() -> UInt16
     {
+        
         let zp =  memory.ReadAddress(address: PC) ; PC = PC + 1
-        let base = (zp + X) & 0xff
-        let adr = memory.ReadAddress(address: UInt16(base))
-         
+        //let base = (zp + X) //& 0xff
+        let base = UInt16(zp)  + UInt16(X) //& 0xff
+        let adr = getAddress(UInt16(base))
+        
         return adr
     }
     
     func get_indexed_indirect_zp_x() -> UInt8
     {
               
-        return memory.ReadAddress(address: UInt16(get_indexed_indirect_zp_x_address() ))
+        return memory.ReadAddress(address: get_indexed_indirect_zp_x_address())
     }
 
     func push(_ v : UInt8)
@@ -2462,109 +2453,145 @@ class CPU {
         }
         else // decimal mode
         {
-            let value = UInt16(n2)
+            ADCDecimalImplementation(s: n2)
+            return A
             
-            let t1 = (UInt16(n1 & 0x0f))
-            let t2 = UInt16((value & 0x0f))
-            let t3 = Int(t1) + Int(t2) + Int(c)
-            var lxx = UInt16(t3 & 0x00ff)
-            if ((lxx & 0xff) > 0x09) {lxx = lxx + 6}
-            
-            let t4 = (UInt16(n1) >> 4)
-            let t5 = (value >> 4)
-            let t6 = ((lxx > 0x0F) ? 1 : 0)
-            let t7 = Int(t4) + Int(t5) + Int(t6)
-            var hxx =  UInt16(t7)
-            
-            if ((hxx & 0xFF) > 9) {hxx = hxx + 6 }
-            
-            var result = (lxx & 0x0f)
-            
-            result = result + (hxx << 4)
-            
-           //print("Adding \(A) and \(value) and getting \(result)")
-           
-            if (hxx > 15) {CARRY_FLAG = true} else {CARRY_FLAG = false}
-            if (result & 0xFF) == 0x00 {ZERO_FLAG = true} else {ZERO_FLAG = false}
-            NEGATIVE_FLAG = false // clearsign();    // negative flag never set for decimal mode. That's a simplification, see http://www.6502.org/tutorials/decimal_mode.html
-            OVERFLOW_FLAG = false // clearoverflow();    // overflow never set for decimal mode BS it sure does
-            
-            // the overflow flag does get set if the result is 0x80
-            
-            if UInt8(result & 0xFF) == 0x80 {
-                OVERFLOW_FLAG = true
-            }
-        
-            return UInt8(result & 0xFF)
+
         }
         
     }
     
-    // Feel good about it.
+    func ADCDecimalImplementation(s : UInt8)
+    {
+        // s = value to be added to accumulator
+        
+        let C : UInt8 = (CARRY_FLAG == true) ? 1 : 0
+        
+        // Lower nib
+        var AL = (A & 15) + (s & 15) + C
+
+        // Higher nib
+        var AH = (A >> 4) + (s >> 4); if AL > 9 { AH += 1 }
+    
+        // Wrap lower nib
+        if (AL > 9) { AL -= 10  }
+
+        // Set Zero flag, but doesn't account for 0x80 answer yet
+        ZERO_FLAG = ((A &+ s &+ C) & 255 == 0) ? true : false
+
+       NEGATIVE_FLAG = (AH & 8 != 0);
+       OVERFLOW_FLAG = ((((AH << 4) ^ A) & 128) != 0) && !((((A ^ s) & 128) != 0));
+
+        if (AH > 9) { AH -= 10; CARRY_FLAG = true } else {CARRY_FLAG = false}
+      
+        // Calculate accumulator
+        A = ((AH << 4) | (AL & 15)) & 255;
+        
+    }
+    
+    func ADCDecimalImplementation2(s : UInt8)
+    {
+        // s = value to be added to accumulator
+      
+        let C : UInt8 = (CARRY_FLAG == true) ? 1 : 0
+        var t : UInt16 = UInt16(A + s + C)
+        
+        if DECIMAL_MODE {
+        
+        if (((A ^ s ^ UInt8(t & 0xff)) & 0x10) == 0x10)
+        {
+            t += 0x06
+        }
+        
+        if ((t & 0xf0) > 0x90)
+        {
+            t += 0x60
+        }
+        
+        }
+        OVERFLOW_FLAG = ((A ^ UInt8(t & 0xff))  & (s ^ UInt8(t & 0xff)) & 0x80) == 0x80 ? true : false
+        CARRY_FLAG = ( t & 0x100) == 0x100 ? true : false
+        ZERO_FLAG = (t == 0) ? true : false
+        NEGATIVE_FLAG = (t & 0x80) == 0x80 ? true : false
+          
+        A = UInt8(t & 0xff)
+
+    }
+    
+    
+    
+    // Fixed the non-Decimal mode Overflow Flag issue
     func subC(_ n1 : UInt8, _ n2: UInt8) -> UInt8
     {
         
         let c : UInt16 = (CARRY_FLAG == true) ? 0 : 1
         
-        if !DECIMAL_MODE
-        {
             
             let value : UInt16 = UInt16(n2) ^ 0x00FF
-           // let result = UInt16(n1) + value + c
-            
-            
+             
             let r1 = Int(n1) - Int(n2)  - Int(c)
             let result = UInt16(r1 & 0xffff)
             
             if (result & 0x80) == 0x80 {NEGATIVE_FLAG = true} else {NEGATIVE_FLAG = false}
             if (result & 0xFF) == 0x00 {ZERO_FLAG = true} else {ZERO_FLAG = false}
-           //if (result < 0x100) {CARRY_FLAG = false} else  {CARRY_FLAG = true}
             
             if (r1 < 0x00) {CARRY_FLAG = false} else  {CARRY_FLAG = true}
             
             if (((n1 ^ n2) & 0x80) == 0x80)  && (((n1 ^ UInt8(value & 0x00FF)) & 0x80) == 0x80) {OVERFLOW_FLAG = true} else {OVERFLOW_FLAG = false}
-            return UInt8(result & 0xFF)
             
-        }
-        else // decimal mode
+
+        
+        if DECIMAL_MODE // Seems to work unless the digits are an illegal decimal value
         {
-           
-            let value = UInt16(n2)
+            // http://www.6502.org/tutorials/decimal_mode.html#A
+            // Would like to implement this as it seems authoritive,
+            // but the algorithm stated doesn't provide enough information on
+            // bit sizes of variables etc of variables to get to work.
             
-            let t1 =  (UInt16(n1 & 0x0f))
-            let t2 = UInt16((value & 0x0f))
-            let t3 = Int(t1) - Int(t2) - Int(c)
-            var lxx = UInt16(t3 & 0x00ff)
+                        let value = UInt16(n2)
             
-            if ((lxx & 0x10) != 0) {lxx = lxx - 6}
+                        let t1 = UInt16(n1 & 0x0f)
+                        let t2 = UInt16((n2 & 0x0f))
+                        let t3 = Int(t1) - Int(t2) - Int(c)
+                        var lxx = UInt16(t3 & 0x00ff)
             
-          //  print(c, t1, t2, t3, lxx)
+                        if ((lxx & 0x10) != 0) {lxx = lxx - 6}
             
+                        let t4 = (UInt16(n1) >> 4)
+                        let t5 = (value >> 4)
+                        let t6 = ((lxx & 0x10) != 0 ? 1 : 0)
+                        let t7 = Int(t4) - Int(t5) - Int(t6)
+                        var hxx =  UInt16(t7 & 0x00ff)
             
-            let t4 = (UInt16(n1) >> 4)
-            let t5 = (value >> 4)
-            let t6 = ((lxx & 0x10) != 0 ? 1 : 0)
-            let t7 = Int(t4) - Int(t5) - Int(t6)
-            var hxx =  UInt16(t7 & 0x00ff)
+                        if ((hxx & 0x10) != 0) {hxx = hxx - 6 }
             
-           // print(t4, t5, t6, t7, hxx)
-           
+                        let result = (lxx & 0x0f) | (hxx << 4)
+                        A = UInt8(result & 0xff)
             
-            if ((hxx & 0x10) != 0) {hxx = hxx - 6 }
+            // Special overflow test
+            var A2C = Int(n1)
+            if (n1 & 0x80) == 0x80 {A2C =  -(Int(n1 ^ 0xff) + 1)}
             
-            var result = (lxx & 0x0f)
+            var S2C = Int(n2)
+            if (n2 & 0x80) == 0x80 {S2C =  -(Int(n2 ^ 0xff) + 1)}
+          
+           let d = A2C - S2C
             
-           // print(result)
+            if (d < -128 || d > 127)
+            {
+                OVERFLOW_FLAG = true
+            }
+            else
+            {
+                OVERFLOW_FLAG = false
+            }
             
-            result = result + (hxx << 4);
+            return A
             
-            result = (lxx & 0x0f) | (hxx << 4)
-            
-            if ((hxx & 0xff) < 0x0f) {CARRY_FLAG = true} else {CARRY_FLAG = false}
-            if (result & 0xFF) == 0x00 {ZERO_FLAG = true} else {ZERO_FLAG = false}
-            NEGATIVE_FLAG = false // clearsign();    // negative flag never set for decimal mode. That's a simplification, see http://www.6502.org/tutorials/decimal_mode.html
-            OVERFLOW_FLAG = false // clearoverflow();    // overflow never set for decimal mode.
-            result = result & 0xff
+          
+        }
+        else
+        {
             return UInt8(result & 0xFF)
         }
     }

@@ -314,3 +314,18 @@ As I watching some more fuzzing runs, the lack of speed of using a 1200 bps seri
 But way worse: the WozMon lacks one key feature of the KIM - the SST switch. When ON, this switch introduces a BRK or NMI after every opcode is executed, via hardware. It's a useful debugging feature for the KIM, as it allows single-stepping through code. Thanks to this mode, I was able to adapt my Mac test program to run a real 6502 app side-by-side on the CPUs rather than test individual instructions - and still check status after each one is executed. (On a WozMon system, the code would would start an opcode.. and then the 6502 keep going, making it impossible to test for differences.)
 
 After updating the code, I was able to run [Lunar Lander](https://github.com/jefftranter/6502/tree/master/asm/KIM-1/TheFirstBookOfKIM/Games/Lunar%20Lander) this way, and once again the wretched flags for the ADC and SBC code sparked some error messages. At least I can do my best to correct these in a real app now. Maybe I will then be able to work up to testing BASIC and find out why that program doesn't work (it will take literally hours to load BASIC so I'd rather find my bugs in smalled programs if I can!). The dream of a working KIM simulator is getting closer :-)
+
+## Sunday, 14th March 2021
+
+Happy Pi Day!
+
+After a frustrating weekend tryng to get ADC and SBC really, truly working I had to pause and accept that I had it working for valid Decimal values (i.e. 00 to 99). Beyond that, with invalid values I get errors. Is this a real issue? It shouldn't be, but I can't be sure. I cannot find a good algorithm that includes pseduo code that takes the time to explain the bit size of the variables, signed/unsigned nature etc. without which getting a true SBC/ADC implementation is tricky. But I'll get there.
+
+I did also take a few hours to test the addressing modes, and yes, I had messed up (indirect, X) and (indirect),Y. Once I got those working, I swapped back to the KIM emulator and clearly it was an improvement:
+
+![](kim2.JPG)
+
+![](kim1.JPG)
+
+So close! If I could only find the remaining major screw-up.. I have fixed all the big stupid issues (more or less), so I feel I'm at the "typo in one or two particular instructions" stage. 
+
