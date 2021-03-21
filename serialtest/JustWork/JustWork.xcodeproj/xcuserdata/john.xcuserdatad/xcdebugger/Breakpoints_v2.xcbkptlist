@@ -7,33 +7,33 @@
       <BreakpointProxy
          BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
          <BreakpointContent
-            uuid = "EF4A4B18-D50B-4818-AAC4-705E22E2A474"
+            uuid = "E97806F4-C19E-45AF-BD0E-04173B876EA1"
             shouldBeEnabled = "No"
             ignoreCount = "0"
             continueAfterRunningActions = "No"
-            filePath = "CPU.swift"
+            filePath = "JustWork/main.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "269"
-            endingLineNumber = "269"
-            landmarkName = "Init(ProgramName:)"
-            landmarkType = "7">
+            startingLineNumber = "1097"
+            endingLineNumber = "1097"
+            landmarkName = "Poke(address:array:)"
+            landmarkType = "9">
          </BreakpointContent>
       </BreakpointProxy>
       <BreakpointProxy
          BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
          <BreakpointContent
-            uuid = "46CCE035-E50D-4B17-AFBF-D19065850CE7"
+            uuid = "BEC7E4BA-0BF6-442C-B07F-69CC8DFD26E2"
             shouldBeEnabled = "No"
             ignoreCount = "0"
             continueAfterRunningActions = "No"
-            filePath = "CPU.swift"
+            filePath = "JustWork/main.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "1197"
-            endingLineNumber = "1197"
-            landmarkName = "LDA_indexed_indirect_x()"
-            landmarkType = "7">
+            startingLineNumber = "729"
+            endingLineNumber = "729"
+            landmarkName = "unknown"
+            landmarkType = "0">
          </BreakpointContent>
       </BreakpointProxy>
    </Breakpoints>

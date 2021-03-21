@@ -329,3 +329,18 @@ I did also take a few hours to test the addressing modes, and yes, I had messed 
 
 So close! If I could only find the remaining major screw-up.. I have fixed all the big stupid issues (more or less), so I feel I'm at the "typo in one or two particular instructions" stage. 
 
+## Saturday, 20th March
+
+Had a little more time, and got a bit further -
+
+![](kim4.png)
+
+![](kim5.png)
+
+The issue that helped was making sure that the virtual memory acted more like virtual memory, so the BASIC text for end of RAM actually worked. But it still feels very far away. Look at the number of BYTES FREE. What's that about? And no BASIC commands work.  Now I wonder what I've messed up, and how to find it. 
+
+I wasted some time trying to get the Apple 1 RC6502 hardware running, as it's faster, but it's more unreliable than the PAL-1. I may have fixed some opcode implementations, but it feels like I've really got them all working - no amount of side-by-side testing can find an issue. 
+
+I really need a way of running MS BASIC side-by-side when things diverge, but it's a huge program to constantly re-load onto the PAL. I added a Just-In-Time mode to the testing program, and that speeds things up a LOT but it can't support when a LDA reaches out beyond memory that isn't already set - so look-up tables fail.
+
+No other serial console program I've tried works either, which is depressing.

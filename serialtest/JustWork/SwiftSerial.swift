@@ -277,6 +277,9 @@ extension SerialPort {
         return bytesRead
     }
 
+    
+ 
+    
     public func readData(ofLength length: Int) throws -> Data {
         let buffer = UnsafeMutablePointer<UInt8>.allocate(capacity: length)
         defer {
