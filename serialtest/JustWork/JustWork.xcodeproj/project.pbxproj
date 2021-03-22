@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		52A9577825F88A540059F0B3 /* CPU.swift in Sources */ = {isa = PBXBuildFile; fileRef = 52A9577725F88A540059F0B3 /* CPU.swift */; };
 		52A9577A25F88A900059F0B3 /* Memory.swift in Sources */ = {isa = PBXBuildFile; fileRef = 52A9577925F88A8F0059F0B3 /* Memory.swift */; };
+		52AD231C2607A29E00840348 /* test.bin in CopyFiles */ = {isa = PBXBuildFile; fileRef = 52AD231B26079E1C00840348 /* test.bin */; };
 		52B92CBA25E4A9D4000D3832 /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = 52B92CB925E4A9D4000D3832 /* main.swift */; };
 		52B92CC225E4AA17000D3832 /* SwiftSerial.swift in Sources */ = {isa = PBXBuildFile; fileRef = 52B92CC125E4AA17000D3832 /* SwiftSerial.swift */; };
 /* End PBXBuildFile section */
@@ -20,6 +21,7 @@
 			dstPath = /usr/share/man/man1/;
 			dstSubfolderSpec = 0;
 			files = (
+				52AD231C2607A29E00840348 /* test.bin in CopyFiles */,
 			);
 			runOnlyForDeploymentPostprocessing = 1;
 		};
@@ -28,6 +30,7 @@
 /* Begin PBXFileReference section */
 		52A9577725F88A540059F0B3 /* CPU.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CPU.swift; sourceTree = SOURCE_ROOT; };
 		52A9577925F88A8F0059F0B3 /* Memory.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Memory.swift; sourceTree = SOURCE_ROOT; };
+		52AD231B26079E1C00840348 /* test.bin */ = {isa = PBXFileReference; lastKnownFileType = archive.macbinary; path = test.bin; sourceTree = "<group>"; };
 		52B92CB625E4A9D4000D3832 /* JustWork */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = JustWork; sourceTree = BUILT_PRODUCTS_DIR; };
 		52B92CB925E4A9D4000D3832 /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
 		52B92CC125E4AA17000D3832 /* SwiftSerial.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwiftSerial.swift; sourceTree = "<group>"; };
@@ -64,6 +67,7 @@
 		52B92CB825E4A9D4000D3832 /* JustWork */ = {
 			isa = PBXGroup;
 			children = (
+				52AD231B26079E1C00840348 /* test.bin */,
 				52B92CB925E4A9D4000D3832 /* main.swift */,
 				52A9577725F88A540059F0B3 /* CPU.swift */,
 				52A9577925F88A8F0059F0B3 /* Memory.swift */,
@@ -257,6 +261,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_ASSET_PATHS = JustWork/test.bin;
 				DEVELOPMENT_TEAM = 975T5Y44XD;
 				ENABLE_HARDENED_RUNTIME = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -268,6 +273,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_ASSET_PATHS = JustWork/test.bin;
 				DEVELOPMENT_TEAM = 975T5Y44XD;
 				ENABLE_HARDENED_RUNTIME = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
