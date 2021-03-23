@@ -28,10 +28,10 @@ let SLEEP : UInt32 = 12000
 private let TESTING = false
 
 private var PROGRAM_COUNTER : UInt16 = 0x200
-private var HIT_BRK = false
+private var HIT_BRK = false             // Keep running code until BRK
 private let KIM = true                 // KIM or Apple 1 WozMon
-private let JIT = true
-private let TEST_SUITE = true
+private let JIT = true                  // Copy the code to KIM just as it runs, to save time
+private let TEST_SUITE = true           // Run the 6502 Stress Test
 private let KIM_TEST_SUITE = false      // Run the tests side by side on the KIM-1
 
 let serialPort: SerialPort = SerialPort(path: "/dev/cu.usbserial-AC00I4ST")
@@ -58,7 +58,7 @@ let code : [UInt8] = [
     0xd8,0xea,0xea,       // CLD
     0xb8,0xea,0xea,       // CLV
     
-  
+    
     
     
     0xa9,0,0,            //   ld a 0
@@ -150,7 +150,7 @@ let code : [UInt8] = [
      0x69,0x11,0,0,
      */
     
-   
+    
     // 0x69,0x01,0,0,
     
     0x00,00,00,00,
@@ -159,7 +159,7 @@ let code : [UInt8] = [
     0xA2,0x2,0,0,      // LDX #$2
     0xA1,0x10,0,0,      // LDA (#$10,X)
     
-     
+    
     0xA9,1,0,0,
     0x6A,0,0,0,
     0,0,0,0,
@@ -450,16 +450,16 @@ let program : [UInt8] = [
     
     
     
-//    0xa0,0x01,
-//    0xb9,0x80, 0,
-//    0x85,0x20,
-//    0x24,0x20,
-//    0xe6,0x20,
-//    0x45,0x20,
-//    0xb0,0xf8,
-//    0x4c,0x07,0x02,
-//    0xea
-//
+    //    0xa0,0x01,
+    //    0xb9,0x80, 0,
+    //    0x85,0x20,
+    //    0x24,0x20,
+    //    0xe6,0x20,
+    //    0x45,0x20,
+    //    0xb0,0xf8,
+    //    0x4c,0x07,0x02,
+    //    0xea
+    //
     
     /*
      0xa9,0,            //   ld a 0
@@ -485,7 +485,7 @@ let program : [UInt8] = [
 ]
 
 let program22: [UInt8] =  [
-
+    
     0xa2,01,0x85,0x20,06,0x20,0xe6,0x20,0x66,0x20,0x66,0x20,0x8a,0x45,0x20,0xe6,0x20,0x26,0x20,0x8a,0x25,0x20,0xe6,0x20,0x05,0x20,0xca,0xd0,0xe9,0x8a,0x4c,0x04,0x02,0x0
     
     
@@ -598,7 +598,7 @@ do {
         if (KIM)
         {
             
-          
+            
             
             
             for step in Range(0...24)
@@ -675,50 +675,46 @@ do {
         
         if TEST_SUITE
         {
-            print("Poke test suite")
+            print("Load test suite")
             LoadTest()
             
-            PROGRAM_COUNTER = 0x16fb // 0x0400
+            PROGRAM_COUNTER = 0x400// 0x16fb // 0x0400
             var OLD_PROGRAM_COUNTER = PROGRAM_COUNTER
             
             while HIT_BRK == false  {
                 
                 if KIM_TEST_SUITE
                 {
-                if (JIT)
-                {
-                    Poke(address:PROGRAM_COUNTER, value: MOS6502.Read(address: PROGRAM_COUNTER))
-                    Poke(address:PROGRAM_COUNTER+1, value: MOS6502.Read(address: PROGRAM_COUNTER+1))
-                    Poke(address:PROGRAM_COUNTER+1, value: MOS6502.Read(address: PROGRAM_COUNTER+1))
-                    
-                }}
-                
-                
-                
+                    if (JIT)
+                    {
+                        Poke(address:PROGRAM_COUNTER, value: MOS6502.Read(address: PROGRAM_COUNTER))
+                        Poke(address:PROGRAM_COUNTER+1, value: MOS6502.Read(address: PROGRAM_COUNTER+1))
+                        Poke(address:PROGRAM_COUNTER+2, value: MOS6502.Read(address: PROGRAM_COUNTER+2))
+                        
+                    }}
+
                 print()
                 print("Program counter: ",String(format: "%04X   ", PROGRAM_COUNTER), terminator: "")
                 
                 if KIM_TEST_SUITE
                 {
-                RunCode(address: PROGRAM_COUNTER) ; GetStatus() ; PrintStatus()
+                    RunCode(address: PROGRAM_COUNTER) ; GetStatus() ; PrintStatus()
                 }
-                    PROGRAM_COUNTER = RunCodeVirtual(address: PROGRAM_COUNTER)
-                 
+                PROGRAM_COUNTER = RunCodeVirtual(address: PROGRAM_COUNTER)
+                
                 if KIM_TEST_SUITE
                 {
-                _ = DiffStatus()
+                    _ = DiffStatus()
                 }
                 else
                 {
-                print("v"+vResult)
+                    print("v"+vResult)
                 }
                 if OLD_PROGRAM_COUNTER == PROGRAM_COUNTER
                 {
                     print(String(format: "BUG    %04X   ", PROGRAM_COUNTER))
                     HIT_BRK = true
                 }
-                
-              
                 
                 OLD_PROGRAM_COUNTER = PROGRAM_COUNTER
             }
@@ -743,12 +739,12 @@ do {
         print()
         print("Pre program")
         
-//        print("Poke in test data")
-//        Poke(address: 0x80,value: 0x00)
-//        Poke(address: 0x81,value: 0x40)
-//
-//        MOS6502.Write(address: UInt16(0x80), byte: 0)
-//        MOS6502.Write(address: UInt16(0x81), byte: 0x40)
+        //        print("Poke in test data")
+        //        Poke(address: 0x80,value: 0x00)
+        //        Poke(address: 0x81,value: 0x40)
+        //
+        //        MOS6502.Write(address: UInt16(0x80), byte: 0)
+        //        MOS6502.Write(address: UInt16(0x81), byte: 0x40)
         
         PROGRAM_COUNTER = 0x200
         while HIT_BRK == false  {
@@ -765,11 +761,7 @@ do {
         
         print("The program ")
         
-//        print("Poke in MS BASIC data")
-//        LoadBasic();
-//
-        
-        
+
         HIT_BRK = false
         PROGRAM_COUNTER = 0x200
         // for step in 0..<16
@@ -782,7 +774,7 @@ do {
             }
             MOS6502.Write(address: UInt16(0x200 + step), byte: program[step])
         }
-
+        
         
         PROGRAM_COUNTER = 0x200 ;
         
@@ -793,7 +785,7 @@ do {
             {
                 Poke(address:PROGRAM_COUNTER, value: MOS6502.Read(address: PROGRAM_COUNTER))
                 Poke(address:PROGRAM_COUNTER+1, value: MOS6502.Read(address: PROGRAM_COUNTER+1))
-                Poke(address:PROGRAM_COUNTER+1, value: MOS6502.Read(address: PROGRAM_COUNTER+1))
+                Poke(address:PROGRAM_COUNTER+2, value: MOS6502.Read(address: PROGRAM_COUNTER+2))
                 
             }
             print("Program counter: ",String(format: "%04X", PROGRAM_COUNTER))
@@ -840,10 +832,10 @@ func PrintStatus()
 {
     // From Real Hardware
     aResult = "A: " + String(format: "%02X",A_REGISTER) + "  X: " + String(format: "%02X",X_REGISTER) + "  Y: " + String(format: "%02X",Y_REGISTER) + "  Flags: " + StatusFlagToString(reg: STATUS_REGISTER) + " PC: " + String(format: "%04X",PC_REGISTER) + " SP: " + String(format: "%02X",SP_REGISTER) + "  Memory: " + String(format: "%02X",Peek(address: 0x0206)) + "  " + String(format: "%02X",Peek(address: 0x032))
-        
-        
-        
-      
+    
+    
+    
+    
 }
 
 func LoadCode(offset : Int) -> Bool
@@ -1156,11 +1148,7 @@ func Poke(address : UInt16, array : [UInt8])
         
         _ = try serialPort.writeString("\r") ; usleep(SLEEP)
         
-        
-        
-        
-        //   let s = try serialPort.readBytes(into: buffer, size: 1024)
-        //  print(s)
+
         let _ = try serialPort.readString(ofLength: 10)
         
         usleep(SLEEP)
@@ -1291,26 +1279,26 @@ func LoadFile(input : String)
         var start = line.index(line.startIndex, offsetBy: 1)
         var end = line.index(line.startIndex, offsetBy: 3)
         var range = start..<end
-
+        
         let number_of_bytes = line[range]
-
+        
         start = line.index(line.startIndex, offsetBy: 3)
         end = line.index(line.startIndex, offsetBy: 7)
         range = start..<end
-
+        
         let address = line[range]
-
-
+        
+        
         start = line.index(line.startIndex, offsetBy: 7)
         end = line.index(line.endIndex, offsetBy: -4)
         range = start..<end
-
+        
         let _ = line[range]
-
-      
+        
+        
         let number_of_bytesD = Int(UInt8((number_of_bytes), radix: 16)!)
         let addressD = Int(UInt16((address), radix: 16)!)
-
+        
         if number_of_bytesD == 0
         {
             return
@@ -1328,8 +1316,8 @@ func LoadFile(input : String)
             MOS6502.Write(address: UInt16(addressD + pair), byte: pairD)
             
             print(address,pairD);
-
-                 }
+            
+        }
     }
     print("")
     print("")
@@ -1340,14 +1328,14 @@ func LoadTest()
 {
     print("Loading test suite")
     let filepath = "/Volumes/Promise Disk/Retro computers/KIM1/serialtest/JustWork/JustWork/test.bin"
-   
+    
     let bData = try! Data(contentsOf: URL(fileURLWithPath: filepath))
-  
+    
     for i in Range(0...bData.count-1)
     {
         MOS6502.Write(address: UInt16(i + 10), byte: bData[i])
     }
-
+    
 }
 
 
