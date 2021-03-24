@@ -621,10 +621,10 @@ class CPU {
         case 0x76 : ROR_zx()
             
         case 0x78 : SEI()
-        case 0x79 : ADC_indexed_x()
+        case 0x79 : ADC_indexed_y()
         case 0x7A : PLY()
             
-        case 0x7D : ADC_indexed_y()
+        case 0x7D : ADC_indexed_x()
         case 0x7E : ROR_indexed_x()
             
         case 0x6C: JMP_REL()
@@ -750,7 +750,7 @@ class CPU {
         case 0xFD : SBC_indexed_x()
         case 0xFE : INC_ax()
             
-        default : /*print("**********************      Unknown instruction (or garbage): " + String(  format: "%02X", instruction) + " at " + String(  format: "%04X", PC) + "   **********************");*/  return false
+        default : print("**********************      Unknown instruction (or garbage): " + String(  format: "%02X", instruction) + " at " + String(  format: "%04X", PC) + "   **********************");  return false
             
         }
         
@@ -803,7 +803,7 @@ class CPU {
     
     func  BIT_a() // 2C
     {
-        let ad = getAddress()
+        let ad = getAbsoluteAddress()
         let v = memory.ReadAddress(address: UInt16(ad))
         let t = (A & v)
         ZERO_FLAG = (t == 0) ? true : false
@@ -818,7 +818,7 @@ class CPU {
     func  ADC_i() // 69
     {
         let v = memory.ReadAddress(address: PC) ; PC = PC + 1
-        A = addC(A,v, carry: CARRY_FLAG)
+        addC(v)
         prn("ADC #$"+String(format: "%02X",v))
     }
     
@@ -826,7 +826,7 @@ class CPU {
     {
         let za = memory.ReadAddress(address: PC);
         let v = get_indexed_indirect_zp_x()
-        A = addC(A,v, carry: CARRY_FLAG)
+        addC(v)
         prn("ADC ($"+String(format: "%02X",za)+",X)")
     }
     
@@ -834,7 +834,7 @@ class CPU {
     {
         let ad = memory.ReadAddress(address: PC) ; PC = PC + 1
         let v = memory.ReadAddress(address: UInt16(ad))
-        A = addC(A,v, carry: CARRY_FLAG)
+        addC(v)
         prn("ADC $"+String(format: "%04X",v))
     }
     
@@ -842,15 +842,15 @@ class CPU {
     {
         let zp = getZeroPageX()
         let v = memory.ReadAddress(address: zp)
-        A = addC(A,v, carry: CARRY_FLAG)
+        addC(v)
         prn("ADC $"+String(format: "%02X",zp &- UInt16(X))+",X")
     }
     
     func  ADC_a() // 6D
     {
-        let ad = getAddress()
+        let ad = getAbsoluteAddress()
         let v = memory.ReadAddress(address: UInt16(ad))
-        A = addC(A,v, carry: CARRY_FLAG)
+        addC(v)
         prn("ADC $"+String(format: "%04X",ad))
     }
     
@@ -858,7 +858,7 @@ class CPU {
     {
         let ad = getAbsoluteX()
         let v = memory.ReadAddress(address: ad)
-        A = addC(A,v, carry: CARRY_FLAG)
+        addC(v)
         prn("ADC $"+String(format: "%04X",ad &- UInt16(X)))
     }
     
@@ -866,20 +866,16 @@ class CPU {
     {
         let ad = getAbsoluteY()
         let v = memory.ReadAddress(address: ad)
-        A = addC(A,v, carry: CARRY_FLAG)
+        addC(v)
         prn("ADC $"+String(format: "%04X",ad &- UInt16(Y)))
     }
     
     
     func  ADC_indirect_indexed_y() // 71
     {
-        // let zp = UInt16(memory.ReadAddress(address: PC));
-        // let v = memory.ReadAddress(address: getIndirectIndexedBase())
-        
         let adr = getIndirectY()
         let v = memory.ReadAddress(address: adr)
-        
-        A = addC(A,v, carry: CARRY_FLAG)
+        addC(v)
         prn("ADC ($"+String(format: "%02X",adr - UInt16(Y))+"),Y")
     }
     
@@ -891,7 +887,7 @@ class CPU {
     func  SBC_i() // E9
     {
         let v = memory.ReadAddress(address: PC) ; PC = PC + 1
-        A = subC(A,v)
+        subC(v)
         prn("SBC #$"+String(format: "%02X",v))
     }
     
@@ -899,7 +895,7 @@ class CPU {
     {
         let zero_page_address = memory.ReadAddress(address: PC) ; PC = PC + 1
         let v = memory.ReadAddress(address: UInt16(zero_page_address))
-        A = subC(A,v)
+        subC(v)
         prn("SBC $"+String(String(format: "%02X",zero_page_address)))
     }
     
@@ -907,15 +903,15 @@ class CPU {
     {
         let ad = getZeroPageX()
         let v = memory.ReadAddress(address: ad)
-        A = subC(A,v)
+        subC(v)
         prn("SBC $"+String(format: "%02X",ad &- UInt16(X))+",X")
     }
     
     func  SBC_a() // ed
     {
-        let ad = getAddress()
+        let ad = getAbsoluteAddress()
         let v = memory.ReadAddress(address: UInt16(ad))
-        A = subC(A,v)
+        subC(v)
         prn("SBC $"+String(format: "%04X",ad))
     }
     
@@ -923,7 +919,7 @@ class CPU {
     {
         let ad = getAbsoluteX()
         let v = memory.ReadAddress(address: ad)
-        A = subC(A,v)
+        subC(v)
         prn("SBC $"+String(format: "%04X",ad - UInt16(X))+",X")
     }
     
@@ -931,7 +927,7 @@ class CPU {
     {
         let ad = getAbsoluteY()
         let v = memory.ReadAddress(address: ad)
-        A = addC(A,v, carry: CARRY_FLAG)
+        subC(v)
         prn("SBC $"+String(format: "%04X",ad - UInt16(Y))+",Y")
     }
     
@@ -939,10 +935,7 @@ class CPU {
     {
         let adr = getIndirectY()
         let v = memory.ReadAddress(address: adr)
-        
-        //let za = memory.ReadAddress(address: PC);
-        //let v = memory.ReadAddress(address: getIndirectIndexedBase())
-        A = subC(A,v)
+        subC(v)
         prn("SBC ($"+String(format: "%04X",adr - UInt16(Y))+"),Y")
     }
     
@@ -950,7 +943,7 @@ class CPU {
     {
         let za = memory.ReadAddress(address: PC );
         let v = get_indexed_indirect_zp_x()
-        A = subC(A,v)
+        subC(v)
         prn("SBC ($"+String(format: "%04X",za)+",X)")
     }
     
@@ -983,7 +976,7 @@ class CPU {
     
     func CPX_A() // EC
     {
-        let ad = getAddress()
+        let ad = getAbsoluteAddress()
         let v = memory.ReadAddress(address: UInt16(ad))
         compare(X, v)
         prn("CPX $"+String(format: "%04X",ad))
@@ -1009,7 +1002,7 @@ class CPU {
     
     func CPY_A()
     {
-        let ad = getAddress()
+        let ad = getAbsoluteAddress()
         let v = memory.ReadAddress(address: UInt16(ad))
         compare(Y, v)
         prn("CPY $"+String(format: "%04X",ad))
@@ -1043,7 +1036,7 @@ class CPU {
     
     func CMP_a() // cd
     {
-        let ad = getAddress()
+        let ad = getAbsoluteAddress()
         let v = memory.ReadAddress(address: UInt16(ad))
         compare(A, v)
         prn("CMP $"+String(format: "%04X",ad))
@@ -1112,7 +1105,7 @@ class CPU {
     
     func LDA_a() // ad
     {
-        let ad = getAddress()
+        let ad = getAbsoluteAddress()
         A = memory.ReadAddress(address: ad)
         SetFlags(value: A)
         prn("LDA $"+String(format: "%04X",ad))
@@ -1140,7 +1133,6 @@ class CPU {
         A = get_indexed_indirect_zp_x()
         SetFlags(value: A)
         prn("LDA ($"+String(format: "%02X",za)+",X)")
-        print("LDA_indexed_indirect_x:" + String(format: "%04X",za))
     }
     
     func  LDA_indirect_indexed_y() // B1
@@ -1174,7 +1166,7 @@ class CPU {
     
     func STA_a() // 8D
     {
-        let v = getAddress()
+        let v = getAbsoluteAddress()
         memory.WriteAddress(address: v, value: A)
         prn("STA #$" + String(format: "%04X",v))
     }
@@ -1214,7 +1206,7 @@ class CPU {
         let adr = get_indexed_indirect_zp_x_address()
         memory.WriteAddress(address: UInt16(adr), value: A)
         prn("STA ($"+String(format: "%02X",za)+"),X")
-        //print("STA_indexed_indirect_x:" + String(format: "%04X",A))
+
     }
     
     
@@ -1245,7 +1237,7 @@ class CPU {
     
     func LDX_a() // ae
     {
-        let ad = getAddress()
+        let ad = getAbsoluteAddress()
         X = memory.ReadAddress(address: ad)
         SetFlags(value: X)
         prn("LDX $"+String(format: "%04X",ad))
@@ -1286,7 +1278,7 @@ class CPU {
     
     func LDY_a() // AC
     {
-        let ad = getAddress()
+        let ad = getAbsoluteAddress()
         Y = memory.ReadAddress(address: UInt16(ad))
         SetFlags(value: Y)
         prn("LDY $"+String(format: "%04X",ad))
@@ -1333,7 +1325,7 @@ class CPU {
     
     func  AND_a() // 2d
     {
-        let ad = getAddress()
+        let ad = getAbsoluteAddress()
         let v = memory.ReadAddress(address: UInt16(ad))
         A = A & v
         SetFlags(value: A)
@@ -1423,7 +1415,7 @@ class CPU {
     
     func  LSR_a() // 4E
     {
-        let ad = getAddress()
+        let ad = getAbsoluteAddress()
         var v = memory.ReadAddress(address: UInt16(ad))
         CARRY_FLAG = (v & 1) == 1
         v = v >> 1
@@ -1475,7 +1467,7 @@ class CPU {
     
     func  OR_a() // 0d
     {
-        let ad = getAddress()
+        let ad = getAbsoluteAddress()
         let v = memory.ReadAddress(address: UInt16(ad))
         A = A | v
         SetFlags(value: A)
@@ -1550,7 +1542,7 @@ class CPU {
     
     func  EOR_a() // 4D
     {
-        let ad = getAddress()
+        let ad = getAbsoluteAddress()
         let v = memory.ReadAddress(address: UInt16(ad))
         A = A ^ v
         SetFlags(value: A)
@@ -1632,7 +1624,7 @@ class CPU {
     
     func  ASL_a() // 0E
     {
-        let ad = getAddress()
+        let ad = getAbsoluteAddress()
         var v = memory.ReadAddress(address: UInt16(ad))
         CARRY_FLAG = ((v & 128) == 128)
         v = v << 1
@@ -1696,7 +1688,7 @@ class CPU {
     
     func  ROL_a() // 2E
     {
-        let ad = getAddress()
+        let ad = getAbsoluteAddress()
         var v = memory.ReadAddress(address: UInt16(ad))
         let msb = ((v & 128) == 128)
         v = v << 1
@@ -1762,7 +1754,7 @@ class CPU {
     
     func  ROR_a() // 6E
     {
-        let ad = getAddress()
+        let ad = getAbsoluteAddress()
         var v = memory.ReadAddress(address: UInt16(ad))
         let lsb = ((v & 1) == 1)
         v = v >> 1
@@ -1798,7 +1790,7 @@ class CPU {
     
     func STX_a() // 8e
     {
-        let ad = getAddress()
+        let ad = getAbsoluteAddress()
         memory.WriteAddress(address: UInt16(ad), value: X)
         prn("STX $" + String(format: "%04X",ad))
     }
@@ -1820,7 +1812,7 @@ class CPU {
     
     func STY_a() // 8c
     {
-        let ad = getAddress()
+        let ad = getAbsoluteAddress()
         memory.WriteAddress(address: UInt16(ad), value: Y)
         prn("STY $" + String(format: "%04X",ad))
     }
@@ -2087,7 +2079,7 @@ class CPU {
     
     func DEC_a() // CE
     {
-        let v = getAddress()
+        let v = getAbsoluteAddress()
         var t = memory.ReadAddress(address: v)
         if t == 0 { t = 255 } else { t = t - 1 }
         memory.WriteAddress(address: v, value: t)
@@ -2097,7 +2089,7 @@ class CPU {
     
     func DEC_ax() // DE
     {
-        let v = getAddress()
+        let v = getAbsoluteAddress()
         var t = memory.ReadAddress(address: v + UInt16(X))
         if t == 0 { t = 255 } else { t = t - 1 }
         memory.WriteAddress(address: v + UInt16(X), value: t)
@@ -2128,7 +2120,7 @@ class CPU {
     
     func INC_a() // EE
     {
-        let v = getAddress()
+        let v = getAbsoluteAddress()
         var t = memory.ReadAddress(address: v)
         if t == 255 { t = 0 } else { t = t + 1 }
         memory.WriteAddress(address: v, value: t)
@@ -2138,7 +2130,7 @@ class CPU {
     
     func INC_ax() // FE
     {
-        let v = getAddress()
+        let v = getAbsoluteAddress()
         var t = memory.ReadAddress(address: v + UInt16(X))
         if t == 255 { t = 0 } else { t = t + 1 }
         memory.WriteAddress(address: v + UInt16(X), value: t)
@@ -2251,7 +2243,7 @@ class CPU {
     
     func JMP_ABS() // 4c
     {
-        let ad = getAddress()
+        let ad = getAbsoluteAddress()
         PC = ad
         prn("JMP $" + String(format: "%04X",ad))
     }
@@ -2259,7 +2251,7 @@ class CPU {
     // buggy plop // 6502 bug here
     func JMP_REL() // 6c
     {
-        let ad = getAddress()
+        let ad = getAbsoluteAddress()
         let target = getAddress(ad)
         PC = target
         
@@ -2281,7 +2273,7 @@ class CPU {
         let h = (PC+1) >> 8
         let l = (PC+1) & 0xff
         
-        let target = getAddress()
+        let target = getAbsoluteAddress()
         
         push(UInt8(h))
         push(UInt8(l))
@@ -2305,16 +2297,13 @@ class CPU {
     
     func getAbsoluteX() -> UInt16
     {
-        let ad = getAddress() &+ UInt16(X)
+        let ad = getAbsoluteAddress() &+ UInt16(X)
         return ad
     }
     
     func getAbsoluteY() -> UInt16
     {
-        let la = memory.ReadAddress(address: PC); PC = PC + 1
-        let ha = memory.ReadAddress(address: PC); PC = PC + 1
-        let ad = UInt16(la) + (UInt16(ha) << 8) + UInt16(Y)
-        
+        let ad = getAbsoluteAddress() &+ UInt16(Y)
         return ad
     }
     
@@ -2350,17 +2339,17 @@ class CPU {
         
     }
     
-    func getIndirectY() -> UInt16  // // (indirect),Y
+    func getIndirectY() -> UInt16  // (indirect),Y // Indexed_Indirect_Y
     {
-        let la = memory.ReadAddress(address: PC) ;  PC = PC + 1
-        //let ha = memory.ReadAddress(address: PC) ; PC = PC + 1
         
-        let eahelp = UInt16(la)
-        let eahelp2 = (eahelp & 0xff00) | ((eahelp &+ 1 ) & 0x00ff)
-        var ea = UInt16(memory.ReadAddress(address: eahelp)) | (UInt16(memory.ReadAddress(address: eahelp2)) << 8)
-        ea = ea &+ UInt16(Y)
+        let ial = UInt16(memory.ReadAddress(address: PC)) ;  PC = PC + 1
+        let bal = UInt16(memory.ReadAddress(address:(UInt16(0xFF & ial))))
+        let bah = UInt16(memory.ReadAddress(address:(UInt16(0xFF & ( ial &+ 1)))))
+           
+        let  ea = bah << 8 &+ bal &+ UInt16(Y)
         
         return ea
+        
     }
     
     func get_indexed_indirect_zp_x_address() -> UInt16
@@ -2368,8 +2357,8 @@ class CPU {
         let fi = memory.ReadAddress(address: PC); PC = PC + 1
         let bal : UInt16 = UInt16(fi) + UInt16(X)
         let adl = UInt16(memory.ReadAddress(address: 0xFF & bal))
-        let adh = UInt16(memory.ReadAddress(address: 0xFF & (bal+1))) << 8
-        let adr = adh + adl
+        let adh = UInt16(memory.ReadAddress(address: 0xFF & (bal+1)))
+        let adr = (adh << 8) + adl
         return adr
         
     }
@@ -2395,7 +2384,7 @@ class CPU {
     
     
     
-    func addC(_ n1 : UInt8, _ n2: UInt8, carry : Bool) -> UInt8
+    func addC2( _ n2: UInt8, carry : Bool)
     {
         
         let c : UInt16 = (CARRY_FLAG == true) ? 1 : 0
@@ -2414,7 +2403,7 @@ class CPU {
                 CARRY_FLAG = false
             }
             
-            let operand0 = (n1 & 0x80)
+            let operand0 = (A & 0x80)
             let operand1 = (n2 & 0x80)
             let result   = (total & 0x80)
             
@@ -2435,28 +2424,17 @@ class CPU {
                 }
             }
             
-            return UInt8(total & 0xFF)
+            A = UInt8(total & 0xFF)
+            SetFlags(value: A)
             
+            return
             
-            //
-            //            if (result & 0x80) == 0x80 {NEGATIVE_FLAG = true} else {NEGATIVE_FLAG = false}
-            //            if (result & 0xFF) == 0x00 {ZERO_FLAG = true} else {ZERO_FLAG = false}
-            //            if (result < 0x100) {CARRY_FLAG = false} else  {CARRY_FLAG = true}
-            //
-            //            let p1 = (result ^ UInt16(A))
-            //            let p2 = (result ^ UInt16(n2))
-            //
-            //            if (p1 & p2) & 0x0080 == 0x80
-            //            {OVERFLOW_FLAG = true} else {OVERFLOW_FLAG = false}
-            //
-            //
-            //            return UInt8(result & 0xFF)
-            
+        
         }
         else // decimal mode
         {
             ADCDecimalImplementation(s: n2)
-            return A
+           
         }
         
     }
@@ -2487,59 +2465,253 @@ class CPU {
         // Calculate accumulator
         A = ((AH << 4) | (AL & 15)) & 255;
         
+        SetFlags(value: A)
+        
     }
     
-    func ADCDecimalImplementation2(s : UInt8)
+//    func ADCDecimalImplementation2(s : UInt8)
+//    {
+//        // s = value to be added to accumulator
+//
+//        let C : UInt8 = (CARRY_FLAG == true) ? 1 : 0
+//        var t : UInt16 = UInt16(A + s + C)
+//
+//        if DECIMAL_MODE {
+//
+//            if (((A ^ s ^ UInt8(t & 0xff)) & 0x10) == 0x10)
+//            {
+//                t += 0x06
+//            }
+//
+//            if ((t & 0xf0) > 0x90)
+//            {
+//                t += 0x60
+//            }
+//
+//        }
+//        OVERFLOW_FLAG = ((A ^ UInt8(t & 0xff))  & (s ^ UInt8(t & 0xff)) & 0x80) == 0x80 ? true : false
+//        CARRY_FLAG = ( t & 0x100) == 0x100 ? true : false
+//        ZERO_FLAG = (t == 0) ? true : false
+//        NEGATIVE_FLAG = (t & 0x80) == 0x80 ? true : false
+//
+//        A = UInt8(t & 0xff)
+//
+//    }
+    
+    func subC( _ local_data: UInt8)
     {
-        // s = value to be added to accumulator
+        var total : UInt16 = 0
+        var bcd_low : UInt16 = 0;
+        var bcd_high : UInt16=0;
+        var bcd_total : UInt16=0;
+        var signed_total : Int16 = 0;
+        var operand0 : UInt8=0;
+        var operand1 : UInt8=0;
+        var result : UInt8=0;
+        var flag_c_invert : UInt8=0;
+        var low_carry : UInt8=0;
+        var high_carry : UInt8=0;
+        let register_a = A
         
-        let C : UInt8 = (CARRY_FLAG == true) ? 1 : 0
-        var t : UInt16 = UInt16(A + s + C)
+        if (CARRY_FLAG) {flag_c_invert=0} else {flag_c_invert=1}
         
-        if DECIMAL_MODE {
+        if DECIMAL_MODE
+        {
+            bcd_low  = UInt16((0x0F & register_a) &- (0x0F & local_data) &- flag_c_invert)
+            if (bcd_low > 0x9) { low_carry=0x10; bcd_low = bcd_low + 0xA ;  }
+                               
+            bcd_high = UInt16((0xF0 & register_a) &- (0xF0 & local_data)) &- UInt16(low_carry)
+            if (bcd_high>0x90) { high_carry=1;  bcd_high = bcd_high &+ 0xA0 ; }
+                      
+            CARRY_FLAG = false  // register_flags = register_flags & 0xFE;              // Clear the C flag
+                           
+            bcd_total = bcd_low + bcd_high // Missing?
             
-            if (((A ^ s ^ UInt8(t & 0xff)) & 0x10) == 0x10)
-            {
-                t += 0x06
-            }
-            
-            if ((t & 0xf0) > 0x90)
-            {
-                t += 0x60
-            }
-            
+            if ((0x00FF & bcd_total) > 0x09) { bcd_total=bcd_total&+0x010; bcd_total=bcd_total&-0x0A; }
+
+            if (high_carry==0) { bcd_total=bcd_total &- 0xA0; CARRY_FLAG = true  }
+            else {CARRY_FLAG = false }
+                     
+            total = (0xFF & (bcd_low + bcd_high))
         }
-        OVERFLOW_FLAG = ((A ^ UInt8(t & 0xff))  & (s ^ UInt8(t & 0xff)) & 0x80) == 0x80 ? true : false
-        CARRY_FLAG = ( t & 0x100) == 0x100 ? true : false
-        ZERO_FLAG = (t == 0) ? true : false
-        NEGATIVE_FLAG = (t & 0x80) == 0x80 ? true : false
+        else
+        {
+            total = UInt16(register_a) &- UInt16(local_data) &- UInt16(flag_c_invert)
+            signed_total = Int16(register_a) - Int16(local_data) - Int16(flag_c_invert)
+            if (signed_total >= 0)   {
+                           // Set the C flag
+                           CARRY_FLAG = true
+                       }
+                       else   {
+                           // Clear the C flag
+                           CARRY_FLAG = false
+                       }
+        }
         
-        A = UInt8(t & 0xff)
+        operand0 = (register_a & 0x80)
+        operand1 = (local_data & 0x80)
+        result   = UInt8((total & 0x80))
+                
+                if (operand0 == 0 && operand1 != 0 && result != 0)
+                {
+                    OVERFLOW_FLAG = true  // Set the V flag
+                }
+                else
+                {
+                
+                    if (operand0 != 0 && operand1 == 0 && result == 0)
+                    {
+                        OVERFLOW_FLAG = true
+                    }
+                    else
+                    {
+                        OVERFLOW_FLAG = false              // Clear the V flag
+                    }
+                }
+        
+        A = UInt8((0xFF & total))
+        
+        SetFlags(value: A)
+        
+    }
+    
+    func addC( _ local_data: UInt8)
+    {
+        var total : UInt16 = 0
+        var bcd_low : UInt16 = 0;
+        var bcd_high : UInt16=0;
+        var bcd_total : UInt16=0;
+       
+        var operand0 : UInt8=0;
+        var operand1 : UInt8=0;
+        var result : UInt8=0;
+        var flag_c : UInt8=0;
+        var low_carry : UInt8=0;
+        var high_carry : UInt8=0;
+        let register_a = A
+        
+        if (CARRY_FLAG) {flag_c=1} else {flag_c=0}
+        
+        if DECIMAL_MODE
+        {
+            bcd_low  = UInt16((0x0F & register_a) &+ (0x0F & local_data) &+ flag_c)
+            if (bcd_low > 0x9) { low_carry=0x10; bcd_low = bcd_low &- 0xA ;  }
+                               
+            bcd_high = UInt16((0xF0 & register_a) &+ (0xF0 & local_data)) &+ UInt16(low_carry)
+            if (bcd_high>0x90) { high_carry=1;  bcd_high = bcd_high &- 0xA0 ; }
+                      
+            CARRY_FLAG = false  // register_flags = register_flags & 0xFE;              // Clear the C flag
+                           
+            bcd_total = bcd_low + bcd_high // Missing?
+            
+            if ((0x00FF & bcd_total) > 0x09) { bcd_total=bcd_total&+0x010; bcd_total=bcd_total&-0x0A; }
+
+            if (high_carry==1) { bcd_total=bcd_total &- 0xA0; CARRY_FLAG = true  }
+            else {CARRY_FLAG = false }
+                     
+            total = (0xFF & (bcd_low + bcd_high))
+        }
+        else
+        {
+            total = UInt16(register_a) &+ UInt16(local_data) &+ UInt16(flag_c)
+            if (total >= 255)   {
+                           // Set the C flag
+                           CARRY_FLAG = true
+                       }
+                       else   {
+                           // Clear the C flag
+                           CARRY_FLAG = false
+                       }
+        }
+        
+        operand0 = (A & 0x80)
+        operand1 = (local_data & 0x80)
+        result   = UInt8((total & 0x80))
+                
+                if (operand0 == 0 && operand1 == 0 && result != 0)
+                {
+                    OVERFLOW_FLAG = true  // Set the V flag
+                }
+                else
+                {
+                
+                    if (operand0 != 0 && operand1 != 0 && result == 0)
+                    {
+                        OVERFLOW_FLAG = true
+                    }
+                    else
+                    {
+                        OVERFLOW_FLAG = false              // Clear the V flag
+                    }
+                }
+        
+        A = UInt8((0xFF & total))
+        
+       
+        SetFlags(value: A)
         
     }
     
     
-    
-    // Fixed the non-Decimal mode Overflow Flag issue
-    func subC(_ n1 : UInt8, _ n2: UInt8) -> UInt8
+    // Fisxed the non-Decimal mode Overflow Flag issue
+    func subC2( _ n2: UInt8)
     {
         
         let c : UInt16 = (CARRY_FLAG == true) ? 0 : 1
+        let value = UInt16(n2)
+        let total = UInt16(A) &- UInt16(value) &- UInt16(c)
+        let signed_total = Int16(A) - Int16(value) - Int16(c)
         
+        if (signed_total >= 0)   {
+            // Set the C flag
+            CARRY_FLAG = true
+        }
+        else   {
+            // Clear the C flag
+            CARRY_FLAG = false
+        }
         
-        let value : UInt16 = UInt16(n2) ^ 0x00FF
+        let operand0 = (A & 0x80)
+        let operand1 = (n2 & 0x80)
+        let result   = (total & 0x80)
         
-        let r1 = Int(n1) - Int(n2)  - Int(c)
-        let result = UInt16(r1 & 0xffff)
+        if (operand0 == 0 && operand1 != 0 && result != 0)
+        {
+            OVERFLOW_FLAG = true  // Set the V flag
+        }
+        else
+        {
         
-        if (result & 0x80) == 0x80 {NEGATIVE_FLAG = true} else {NEGATIVE_FLAG = false}
-        if (result & 0xFF) == 0x00 {ZERO_FLAG = true} else {ZERO_FLAG = false}
+            if (operand0 != 0 && operand1 == 0 && result == 0)
+            {
+                OVERFLOW_FLAG = true
+            }
+            else
+            {
+                OVERFLOW_FLAG = false              // Clear the V flag
+            }
+        }
         
-        if (r1 < 0x00) {CARRY_FLAG = false} else  {CARRY_FLAG = true}
+        A = UInt8(total & 0xFF)
+        SetFlags(value: A)
         
-        if (((n1 ^ n2) & 0x80) == 0x80)  && (((n1 ^ UInt8(value & 0x00FF)) & 0x80) == 0x80) {OVERFLOW_FLAG = true} else {OVERFLOW_FLAG = false}
-        
-        
+        if DECIMAL_MODE
+        {
+            return
+        }
+//        let value : UInt16 = UInt16(n2) ^ 0x00FF
+//
+//        let r1 = Int(n1) - Int(n2)  - Int(c)
+//        let result = UInt16(r1 & 0xffff)
+//
+//        if (result & 0x80) == 0x80 {NEGATIVE_FLAG = true} else {NEGATIVE_FLAG = false}
+//        if (result & 0xFF) == 0x00 {ZERO_FLAG = true} else {ZERO_FLAG = false}
+//
+//        if (r1 < 0x00) {CARRY_FLAG = false} else  {CARRY_FLAG = true}
+//
+//        if (((n1 ^ n2) & 0x80) == 0x80)  && (((n1 ^ UInt8(value & 0x00FF)) & 0x80) == 0x80) {OVERFLOW_FLAG = true} else {OVERFLOW_FLAG = false}
+//
+//
         
         if DECIMAL_MODE // Seems to work unless the digits are an illegal decimal value
         {
@@ -2550,14 +2722,14 @@ class CPU {
             
             let value = UInt16(n2)
             
-            let t1 = UInt16(n1 & 0x0f)
+            let t1 = UInt16(A & 0x0f)
             let t2 = UInt16((n2 & 0x0f))
             let t3 = Int(t1) - Int(t2) - Int(c)
             var lxx = UInt16(t3 & 0x00ff)
             
             if ((lxx & 0x10) != 0) {lxx = lxx - 6}
             
-            let t4 = (UInt16(n1) >> 4)
+            let t4 = (UInt16(A) >> 4)
             let t5 = (value >> 4)
             let t6 = ((lxx & 0x10) != 0 ? 1 : 0)
             let t7 = Int(t4) - Int(t5) - Int(t6)
@@ -2569,8 +2741,8 @@ class CPU {
             A = UInt8(result & 0xff)
             
             // Special overflow test
-            var A2C = Int(n1)
-            if (n1 & 0x80) == 0x80 {A2C =  -(Int(n1 ^ 0xff) + 1)}
+            var A2C = Int(A)
+            if (A & 0x80) == 0x80 {A2C =  -(Int(A ^ 0xff) + 1)}
             
             var S2C = Int(n2)
             if (n2 & 0x80) == 0x80 {S2C =  -(Int(n2 ^ 0xff) + 1)}
@@ -2586,18 +2758,20 @@ class CPU {
                 OVERFLOW_FLAG = false
             }
             
-            return A
+            SetFlags(value: A)
+            return
             
             
         }
         else
         {
-            return UInt8(result & 0xFF)
+            A = UInt8(result & 0xFF)
+            SetFlags(value: A)
         }
     }
     
     
-    func getAddress() -> UInt16
+    func getAbsoluteAddress() -> UInt16
     {
         // Get 16 bit address from current PC
         let l = UInt16(memory.ReadAddress(address: PC))
@@ -2651,7 +2825,6 @@ class CPU {
     func prn(_ message : String)
     {
         let ins = String(message).padding(toLength: 12, withPad: " ", startingAt: 0)
-        
         statusmessage = ins
     }
 }

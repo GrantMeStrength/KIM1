@@ -654,7 +654,7 @@ do {
                         
                     }
                     
-                    print()
+                  //  print()
                     
                     
                 }
@@ -678,7 +678,7 @@ do {
             print("Load test suite")
             LoadTest()
             
-            PROGRAM_COUNTER = 0x400// 0x16fb // 0x0400
+            PROGRAM_COUNTER = 0x400 // 0x3381 // 0x3483 // Just the math 0x400// 0x16fb // 0x0400
             var OLD_PROGRAM_COUNTER = PROGRAM_COUNTER
             
             while HIT_BRK == false  {
@@ -910,7 +910,7 @@ func RunCodeVirtual(address: UInt16) -> UInt16
     
     print(opcode.opcode, String(format: "%02X",MOS6502.Read(address: address)) )
     
-    vResult =  "A: " + String(format: "%02X",MOS6502.getA()) + "  X: " + String(format: "%02X",MOS6502.getX()) + "  Y: " + String(format: "%02X",MOS6502.getY()) + "  Flags: " + StatusFlagToString(reg: MOS6502.GetStatusRegister()) + " PC: " + String(format: "%04X",opcode.address) + " SP: " + String(format: "%02X",opcode.stack) + "  Memory: " + String(format: "%02X",MOS6502.Read(address: 0x026)) + "  " + String(format: "%02X",MOS6502.Read(address: 0x032))
+    vResult =  "A: " + String(format: "%02X",MOS6502.getA()) + "  X: " + String(format: "%02X",MOS6502.getX()) + "  Y: " + String(format: "%02X",MOS6502.getY()) + "  Flags: " + StatusFlagToString(reg: MOS6502.GetStatusRegister()) + " PC: " + String(format: "%04X",opcode.address) + " SP: " + String(format: "%02X",opcode.stack) + "  Memory: (0f) " + String(format: "%02X",MOS6502.Read(address: 0x000f)) + " (10) " + String(format: "%02X",MOS6502.Read(address: 0x0010))
     
     return opcode.address
 }
@@ -1335,6 +1335,14 @@ func LoadTest()
     {
         MOS6502.Write(address: UInt16(i + 10), byte: bData[i])
     }
+    
+    MOS6502.Write(address: 0x01f5, byte: 0x42)
+    
+    // Blank out some parts
+//    for i in Range(0x5d...0x1ff)
+//    {
+//        MOS6502.Write(address: UInt16(i), byte: 0)
+//    }
     
 }
 
