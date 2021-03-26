@@ -2384,7 +2384,7 @@ class CPU {
     
     
     
-    func addC2( _ n2: UInt8, carry : Bool)
+    func addC( _ n2: UInt8)
     {
         
         let c : UInt16 = (CARRY_FLAG == true) ? 1 : 0
@@ -2517,17 +2517,21 @@ class CPU {
         
         if DECIMAL_MODE
         {
-            bcd_low  = UInt16((0x0F & register_a) &- (0x0F & local_data) &- flag_c_invert)
-            if (bcd_low > 0x9) { low_carry=0x10; bcd_low = bcd_low + 0xA ;  }
+           // bcd_low  = UInt16((0x0F & register_a) &- (0x0F & local_data) &- flag_c_invert)
+           
+            
+            bcd_low  = 0xffff &  (UInt16(0x0F & register_a) &- UInt16(0x0F & local_data) &- UInt16(flag_c_invert))
+           
+            if (bcd_low > 0x09) { low_carry=0x10; bcd_low = bcd_low &+ 0x0A ;  }
                                
-            bcd_high = UInt16((0xF0 & register_a) &- (0xF0 & local_data)) &- UInt16(low_carry)
+            bcd_high = UInt16(0xF0 & register_a) &- UInt16(0xF0 & local_data) &- UInt16(low_carry)
+            //bcd_high = UInt16((0xF0 & register_a) &- (0xF0 & local_data)) &- UInt16(low_carry)
             if (bcd_high>0x90) { high_carry=1;  bcd_high = bcd_high &+ 0xA0 ; }
                       
             CARRY_FLAG = false  // register_flags = register_flags & 0xFE;              // Clear the C flag
                            
-            bcd_total = bcd_low + bcd_high // Missing?
-            
-            if ((0x00FF & bcd_total) > 0x09) { bcd_total=bcd_total&+0x010; bcd_total=bcd_total&-0x0A; }
+           // bcd_total = bcd_low + bcd_high // Missing?
+            //if ((0x00FF & bcd_total) > 0x09) { bcd_total=bcd_total&+0x010; bcd_total=bcd_total&-0x0A; }
 
             if (high_carry==0) { bcd_total=bcd_total &- 0xA0; CARRY_FLAG = true  }
             else {CARRY_FLAG = false }
@@ -2538,6 +2542,7 @@ class CPU {
         {
             total = UInt16(register_a) &- UInt16(local_data) &- UInt16(flag_c_invert)
             signed_total = Int16(register_a) - Int16(local_data) - Int16(flag_c_invert)
+            
             if (signed_total >= 0)   {
                            // Set the C flag
                            CARRY_FLAG = true
@@ -2575,7 +2580,7 @@ class CPU {
         
     }
     
-    func addC( _ local_data: UInt8)
+    func addC2( _ local_data: UInt8)
     {
         var total : UInt16 = 0
         var bcd_low : UInt16 = 0;
@@ -2594,17 +2599,21 @@ class CPU {
         
         if DECIMAL_MODE
         {
-            bcd_low  = UInt16((0x0F & register_a) &+ (0x0F & local_data) &+ flag_c)
-            if (bcd_low > 0x9) { low_carry=0x10; bcd_low = bcd_low &- 0xA ;  }
+            //bcd_low  = UInt16(0x0F & register_a) &+ UInt16(0x0F & local_data) &+ UInt16(flag_c)
+            bcd_low  = UInt16( (0x0F & register_a) + (0x0F & local_data) + (flag_c))
+                     
+            if (bcd_low > 0x09) { low_carry=0x10; bcd_low = bcd_low &- 0x0A ;  }
                                
-            bcd_high = UInt16((0xF0 & register_a) &+ (0xF0 & local_data)) &+ UInt16(low_carry)
+           // bcd_high = UInt16(0xF0 & register_a) &+ UInt16(0xF0 & local_data) &+ UInt16(low_carry)
+            bcd_high = UInt16((0xF0 & register_a) + (0xF0 & local_data) + (low_carry))
+           
             if (bcd_high>0x90) { high_carry=1;  bcd_high = bcd_high &- 0xA0 ; }
                       
             CARRY_FLAG = false  // register_flags = register_flags & 0xFE;              // Clear the C flag
                            
-            bcd_total = bcd_low + bcd_high // Missing?
+            //bcd_total = bcd_low + bcd_high // Missing?
             
-            if ((0x00FF & bcd_total) > 0x09) { bcd_total=bcd_total&+0x010; bcd_total=bcd_total&-0x0A; }
+            //if ((0x00FF & bcd_total) > 0x09) { bcd_total=bcd_total&+0x010; bcd_total=bcd_total&-0x0A; }
 
             if (high_carry==1) { bcd_total=bcd_total &- 0xA0; CARRY_FLAG = true  }
             else {CARRY_FLAG = false }
@@ -2613,7 +2622,7 @@ class CPU {
         }
         else
         {
-            total = UInt16(register_a) &+ UInt16(local_data) &+ UInt16(flag_c)
+            total = UInt16(register_a) + UInt16(local_data) + UInt16(flag_c)
             if (total >= 255)   {
                            // Set the C flag
                            CARRY_FLAG = true

@@ -344,3 +344,21 @@ I wasted some time trying to get the Apple 1 RC6502 hardware running, as it's fa
 I really need a way of running MS BASIC side-by-side when things diverge, but it's a huge program to constantly re-load onto the PAL. I added a Just-In-Time mode to the testing program, and that speeds things up a LOT but it can't support when a LDA reaches out beyond memory that isn't already set - so look-up tables fail.
 
 No other serial console program I've tried works either, which is depressing.
+
+## Monday 23rd, March
+
+OMG. I ported [the test](https://github.com/Klaus2m5/6502_65C02_functional_tests) and worked through it, unblocking a few minor issues. Then I was stuck. Why didn't it work? I found another [repo that contained a 6502 emulation](https://github.com/MicroCoreLabs/Projects/blob/master/MCL65%2B/SourceCode/MCL65%2B.ino) (very nice too - really does a beautful job of organizing everything) and still nothing. And then.. going through every - single - instruction - AGAIN, I found it: I had transposed ADC_indexed_y and ADC_indexed_x instructions. I will not forget 79 and 7D in a hurry!
+
+With that fixed the test suite passed, and I copied the code into the KIM emulator and ta-da! BASIC finally does something! It's not perfect, but it can **PRINT 2 + 2** so I'm calling that a win for today.
+
+![](kim7.jpg)
+
+![](kim8.jpg)
+
+## Thursday 25th, March
+
+I was pleased that my 6502 emulation was passing the test - until I remembered I had opted out of ADC/SBC in Binary mode. Ugh. Turning that on, and of course, it failed. I update the ADC/SBC routines and I think it's working - the tests take a long time. I think it's working *enough* anyway, because with some help from Jim McClanahan who pointed out how the BREAK operation works, I was able to make a one byte chance to MS BASIC and it now works - and works well!
+
+![](kim9.png)
+
+I could spend more time adding the code to support Ctrl+C and BREAK, but I also have to update the Virtual KIM app work with different screen sizes. It would be great to get the other console apps working too: Forth, JMON, Tiny BASIC, and add the ability to snapshot and restore memory (to make it easy to save a lot programs).
