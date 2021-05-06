@@ -337,7 +337,7 @@ Had a little more time, and got a bit further -
 
 ![](kim5.png)
 
-The issue that helped was making sure that the virtual memory acted more like virtual memory, so the BASIC text for end of RAM actually worked. But it still feels very far away. Look at the number of BYTES FREE. What's that about? And no BASIC commands work.  Now I wonder what I've messed up, and how to find it. 
+The issue that helped was making sure that the virtual memory acted more like virtual memory, so the BASIC test for end of RAM actually worked. But it still feels very far away. Look at the number of BYTES FREE. What's that about? And no BASIC commands work.  Now I wonder what I've messed up, and how to find it. 
 
 I wasted some time trying to get the Apple 1 RC6502 hardware running, as it's faster, but it's more unreliable than the PAL-1. I may have fixed some opcode implementations, but it feels like I've really got them all working - no amount of side-by-side testing can find an issue. 
 
@@ -362,3 +362,9 @@ I was pleased that my 6502 emulation was passing the test - until I remembered I
 ![](kim9.png)
 
 I could spend more time adding the code to support Ctrl+C and BREAK, but I also have to update the Virtual KIM app work with different screen sizes. It would be great to get the other console apps working too: Forth, JMON, Tiny BASIC, and add the ability to snapshot and restore memory (to make it easy to save a lot programs).
+
+## Wrap-up
+
+The bug with addressing modes was the big issue. Other issues were minor and related to the implementation of the virtual KIM-1 rather than the 6502 implementation. I'm pretty sure the 6502 part is ok.
+
+I have added a simple Apple-1 implementation to my project, and that works too, so I'm working on wrapping things up into an app that I can submit to the App Store. I've no idea if Apple will let it through their review process, but we'll see!
