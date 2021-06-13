@@ -1337,72 +1337,7 @@ func LoadTest()
     }
     
     MOS6502.Write(address: 0x01f5, byte: 0x42)
-    
-    // Blank out some parts
-//    for i in Range(0x5d...0x1ff)
-//    {
-//        MOS6502.Write(address: UInt16(i), byte: 0)
-//    }
-    
+
 }
 
 
-/*
- 
- //
- //        for i in Range(0...27)
- //        {
- //            let c = try serialPort.readChar()
- //            print(i, c)
- //        }
- //
- //
- //
- */
-
-/*
- ; Test all addressing modes
- 0200                          .ORG   $200
- 0200   D8                     CLD
- 0201                             ; Put some default values into memory - also test immediate
- 0201   A9 10                  LDA   #$10
- 0203   85 00                  STA   $0
- 0205   A9 01                  LDA   #$01
- 0207   85 01                  STA   $1
- 0209   A9 20                  LDA   #$20
- 020B   85 02                  STA   $2
- 020D   A9 01                  LDA   #$01
- 020F   85 03                  STA   $3
- 0211   A9 42                  LDA   #$42
- 0213   85 10                  STA   $10
- 0215   A9 69                  LDA   #$69
- 0217   85 11                  STA   $11
- 0219   A9 99                  LDA   #$99
- 021B   85 12                  STA   $12
- 021D   A9 18                  LDA   #$18
- 021F   8D 11 01               STA   $0111
- 0222   A9 21                  LDA   #$21
- 0224   8D 20 01               STA   $0120
- 0227                             ; Start loading A using different addressing modes
- 0227   A9 00                  LDA   #$0   ; Load A with 0
- 0229                             ; Zero Page
- 0229   A5 10                  LDA   $10   ; Load A with contents of (10) which is 42
- 022B   A5 11                  LDA   $11   ; Load A with contents of (11) which is 69
- 022D                             ; Zero page, indexed
- 022D   A2 02                  LDX   #$02
- 022F   B5 10                  LDA   $10,X   ; Load A with contents of (10 + X) which is 99
- 0231                             ; Absolute
- 0231   AD 10 00               DB   $AD,$10,$00   ; Load A with contents of (0010) which is 42
- 0234                             ; Absolute X
- 0234   BD 10 00               DB   $BD,$10,$00   ; Load A with contents of (0010 + X) which 99
- 0237                             ; Absolute Y
- 0237   A0 01                  LDY   #$1
- 0239   B9 10 00               LDA   $0010,Y   ; Load A with contents of (0010 + Y) which is 69
- 023C                             ; (Indirect, X)
- 023C   A1 00                  LDA   ($0000,X)   ; Base addr = ($0000 + X). Load A with (addr) = 21
- 023E                             ; (Indirect),Y
- 023E   B1 00                  LDA   ($0000),Y   ; Base addr = contents of (0000) )Load a with (addr+Y) = 18
- 0240   00                     BRK
- 
- 
- */

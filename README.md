@@ -48,6 +48,16 @@ This case is constructed using laser-cut acrylic and a 3D printed frame. Photos 
 
 [Some code and ideas](retroshield/retroshield.md) as I work out whether testing emulated 6502 opcodes against real ones is possible and useful.
 
+## PAL-1 Case
+
+Using some laser-cut acrylic and 3D printing, I made a case and keypad for the PAL-1. Gives it a little protection and is easier to type on. The files are in the archive.
+
+![](pal1a.jpeg)
+
+![](pal1b.jpeg)
+
+![](pal1c.jpeg)
+
 
 ## Links
 
