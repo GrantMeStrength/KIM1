@@ -3,6 +3,10 @@
 
 Some code and experiments for the KIM-1, but as I don't have a KIM-1, it's really the PAL-1 and Kim Uno.
 
+## Audio - June 15, 2021
+
+In the audio folder you'll find some programs saved from the PAL-1. These can be particularly useful when setting up the PAL-1 cassette interface - especially Vu-Tape.wav. Refer to the [instructions for the PAL-1 Cassette interface](http://pal.aibs.ws/assets/Cassette_expansion_manual.pdf) for more details. 
+
 ## Serial Status
 
 When debugging, it can be useful to have a log of the executed instructions and state of the 
@@ -38,6 +42,8 @@ of hex strings, with a few additions for the loading address and a checksum.
 I found a program to generate the papertape format, but it was written a long time ago and my current Windows system threw
 a fit when I tried to run it. So here is some C# code that will get you most of the way to writing a utility that can take
 your assembled 6502 (from a emulated assembler for example) into a format you can load into the KIM-1 or clone.
+
+
 
 ## Kim Uno Case
 
