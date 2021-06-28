@@ -3,6 +3,13 @@
 
 Some code and experiments for the KIM-1, but as I don't have a KIM-1, it's really the PAL-1 and Kim Uno.
 
+## Manual - June 27, 2021
+
+An updated PDF manual that is baked into the [Virtual 6502 iOS](https://appstoreconnect.apple.com/apps/1548356829/appstore/info#:~:text=Additional%20Information-,View,-on%20App%20Store) currently on the App Store. It is impossible to refer to the manual while using the app, so you might want to download it from here. The filename is ```Manual-for-app.pdf```.
+
+
+
+
 ## Audio - June 15, 2021
 
 In the audio folder you'll find some programs saved from the PAL-1. These can be particularly useful when setting up the PAL-1 cassette interface - especially Vu-Tape.wav. Refer to the [instructions for the PAL-1 Cassette interface](http://pal.aibs.ws/assets/Cassette_expansion_manual.pdf) for more details. 
