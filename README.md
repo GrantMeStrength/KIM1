@@ -7,6 +7,14 @@ Some code and experiments for the KIM-1, but as I don't have a KIM-1, it's reall
 
 An updated PDF manual that is baked into the [Virtual 6502 iOS](https://appstoreconnect.apple.com/apps/1548356829/appstore/info#:~:text=Additional%20Information-,View,-on%20App%20Store) currently on the App Store. It is impossible to refer to the manual while using the app, so you might want to download it from here. The filename is ```Manual-for-app.pdf```.
 
+I also released a TestFlight update to the app which does several things:
+
+* Fixes a display issue on iOS 15 devices (lines on the terminal display)
+
+* Supports pasting in "paper tape" format code. This makes it possible to load programs into the KIM from Internet archives etc. 
+
+I am also toying with the idea of adding a proper 6502 assembler. Writing an assembler would be a fun challenge.
+
 
 
 
