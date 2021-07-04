@@ -3,6 +3,15 @@
 
 Some code and experiments for the KIM-1, but as I don't have a KIM-1, it's really the PAL-1 and Kim Uno.
 
+## Assembler - July 4, 2021
+
+I've udated the [Virtual 6502 iOS](https://appstoreconnect.apple.com/apps/1548356829/appstore/info#:~:text=Additional%20Information-,View,-on%20App%20Store) by fixing some bugs (including an annoying one that made it hang if the user pressed more than one button at a time) and adding a 6502 Assembler. The Assembler was a [fun project](https://github.com/grantmestrength/assembler6502) in itself, and although it is far from perfect, it can be used to write code for the KIM-1 and Apple 1 systems. 
+
+I keep hitting limitatinos with SwiftUI (simple things - like making a text view that is read only, or dismissing the keyboard), but its getting better I guess.
+
+I also updated the manual, and its in this repo for easy access.
+
+
 ## Manual - June 27, 2021
 
 An updated PDF manual that is baked into the [Virtual 6502 iOS](https://appstoreconnect.apple.com/apps/1548356829/appstore/info#:~:text=Additional%20Information-,View,-on%20App%20Store) currently on the App Store. It is impossible to refer to the manual while using the app, so you might want to download it from here. The filename is ```Manual-for-app.pdf```.
