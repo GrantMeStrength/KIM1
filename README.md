@@ -1,18 +1,15 @@
 # KIM-1 / PAL-1 / KIM UNO
 
-
 Some code and experiments for the KIM-1, but as I don't have a KIM-1, it's really the PAL-1 and Kim Uno.
 
-## Assembler - July 4, 2021
+## Virtual 6502 App - An Assembler - July 4, 2021
 
-I've udated the [Virtual 6502 iOS](https://appstoreconnect.apple.com/apps/1548356829/appstore/info#:~:text=Additional%20Information-,View,-on%20App%20Store) by fixing some bugs (including an annoying one that made it hang if the user pressed more than one button at a time) and adding a 6502 Assembler. The Assembler was a [fun project](https://github.com/grantmestrength/assembler6502) in itself, and although it is far from perfect, it can be used to write code for the KIM-1 and Apple 1 systems. 
-
-I keep hitting limitatinos with SwiftUI (simple things - like making a text view that is read only, or dismissing the keyboard), but its getting better I guess.
+I've udated the [Virtual 6502 iOS] app (https://apps.apple.com/us/app/virtualkim/id1548356829) by fixing some bugs (including an annoying one that made it hang if the user pressed more than one button at a time) and adding a 6502 Assembler. The Assembler was a [fun project](https://github.com/grantmestrength/assembler6502) in itself, and although it is far from perfect, it can be used to write code for the KIM-1 and Apple 1 systems. I have an update I need to publish which corrects some issues with the RIOT emulation and memory locations.
 
 I also updated the manual, and its in this repo for easy access.
 
 
-## Manual - June 27, 2021
+## Virtual 6502 App -  Manual - June 27, 2021
 
 An updated PDF manual that is baked into the [Virtual 6502 iOS](https://appstoreconnect.apple.com/apps/1548356829/appstore/info#:~:text=Additional%20Information-,View,-on%20App%20Store) currently on the App Store. It is impossible to refer to the manual while using the app, so you might want to download it from here. The filename is ```Manual-for-app.pdf```.
 
@@ -27,14 +24,14 @@ I am also toying with the idea of adding a proper 6502 assembler. Writing an ass
 
 
 
-## Audio - June 15, 2021
+## PAL-1 - Audio - June 15, 2021
 
 In the audio folder you'll find some programs saved from the PAL-1. These can be particularly useful when setting up the PAL-1 cassette interface - especially Vu-Tape.wav. Refer to the [instructions for the PAL-1 Cassette interface](http://pal.aibs.ws/assets/Cassette_expansion_manual.pdf) for more details. 
 
-## Serial Status
+##  PAL-1 - Serial Status Utility program
 
-When debugging, it can be useful to have a log of the executed instructions and state of the 
-registers. 
+*When debugging 6502 code written on the PAL-1, it can be useful to have a log of the executed instructions and state of the 
+registers displayed somewhere. I wrote some code that displays this information over the serial port, placing it in a memory location that should keep it out of the way, and only requires using a different value for the vector you need to enter at the start of every programming session.*
 
 This code can be placed in a new ROM image, and by changing the regular NMI vector at $17FA/$17FB to point at it,
 it will be called every single-stepped instruction. It uses monitor code to send the register status to the serial port. 
@@ -69,7 +66,7 @@ your assembled 6502 (from a emulated assembler for example) into a format you ca
 
 
 
-## Kim Uno Case
+## Kim Uno - Case
 
 Some guides on making a case for the KIM Uno: a small, battery powered handheld KIM clone designed by Oscar Vermeulen. 
 This case is constructed using laser-cut acrylic and a 3D printed frame. Photos are included.
@@ -78,7 +75,7 @@ This case is constructed using laser-cut acrylic and a 3D printed frame. Photos 
 
 [Some code and ideas](retroshield/retroshield.md) as I work out whether testing emulated 6502 opcodes against real ones is possible and useful.
 
-## PAL-1 Case
+## PAL-1 - Case
 
 Using some laser-cut acrylic and 3D printing, I made a case and keypad for the PAL-1. Gives it a little protection and is easier to type on. The files are in the archive.
 
